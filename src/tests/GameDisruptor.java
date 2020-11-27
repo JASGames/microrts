@@ -92,7 +92,7 @@ public class GameDisruptor extends JPanel {
     }
 
     public static void RunSimulation(boolean display) throws Exception {
-        UnitTypeTable utt = new UnitTypeTable(VERSION_NON_DETERMINISTIC, MOVE_CONFLICT_RESOLUTION_CANCEL_BOTH);
+        UnitTypeTable utt = new UnitTypeTable(VERSION_ORIGINAL, MOVE_CONFLICT_RESOLUTION_CANCEL_BOTH);
 
         //BlueLight
         UnitType blight = new UnitType();
@@ -104,7 +104,7 @@ public class GameDisruptor extends JPanel {
         blight.attackRange = BlueRange;
         blight.produceTime = 80;
         blight.moveTime = 8;
-        blight.attackTime = 5;
+        blight.attackTime = 10;
         blight.isResource = false;
         blight.isStockpile = false;
         blight.canHarvest = false;
@@ -123,7 +123,7 @@ public class GameDisruptor extends JPanel {
         rlight.attackRange = RedRange;
         rlight.produceTime = 80;
         rlight.moveTime = 8;
-        rlight.attackTime = 5;
+        rlight.attackTime = 10;
         rlight.isResource = false;
         rlight.isStockpile = false;
         rlight.canHarvest = false;
@@ -156,7 +156,7 @@ public class GameDisruptor extends JPanel {
             GameState gs = new GameState(pgs, utt);
 
             int MAXCYCLES = 350; // Maximum game length
-            int PERIOD = 15; // Refresh rate for display (milliseconds)
+            int PERIOD = 25; // Refresh rate for display (milliseconds)
 
             boolean gameover = false;
 
