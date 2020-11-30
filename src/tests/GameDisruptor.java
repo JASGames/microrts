@@ -6,39 +6,23 @@
 
 package tests;
 
-import ai.abstraction.HeavyRush;
 import ai.abstraction.LightRush;
-import ai.abstraction.pathfinding.AStarPathFinding;
 import ai.core.AI;
-import ai.abstraction.ChromoBot;
-import ai.abstraction.HeavyDefense;
 import ai.abstraction.pathfinding.NewStarPathFinding;
 import gui.PhysicalGameStatePanel;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.*;
-import java.io.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import gui.frontend.FEStatePane;
-import gui.frontend.FETournamentPane;
-import gui.frontend.FETracePane;
-import gui.frontend.FrontEnd;
-import javafx.scene.layout.Border;
 import rts.GameState;
 import rts.PhysicalGameState;
 import rts.PlayerAction;
-import rts.Trace;
-import rts.TraceEntry;
 import rts.units.Unit;
 import rts.units.UnitType;
 import rts.units.UnitTypeTable;
-import util.XMLWriter;
 
 import static rts.units.UnitTypeTable.*;
 
@@ -50,9 +34,13 @@ public class GameDisruptor extends JPanel {
     private static int BlueHP = 20;
     private static int BlueDamage = 10;
     private static int BlueRange = 2;
+    private static int BlueMoveTime = 8;
+    private static int BlueAttackTime = 10;
     private static int RedHP = 20;
     private static int RedDamage = 10;
     private static int RedRange = 2;
+    private static int RedMoveTime = 8;
+    private static int RedAttackTime = 10;
     private static int SimulationCount = 1000;
     private static boolean Running = false;
 
@@ -103,8 +91,8 @@ public class GameDisruptor extends JPanel {
         blight.maxDamage = BlueDamage;
         blight.attackRange = BlueRange;
         blight.produceTime = 80;
-        blight.moveTime = 8;
-        blight.attackTime = 10;
+        blight.moveTime = BlueMoveTime;
+        blight.attackTime = BlueAttackTime;
         blight.isResource = false;
         blight.isStockpile = false;
         blight.canHarvest = false;
@@ -240,7 +228,7 @@ public class GameDisruptor extends JPanel {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JPanel p1 = new JPanel();
-        p1.setLayout(new GridLayout(10,2));
+        p1.setLayout(new GridLayout(12,2));
         p1.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         p1.add( new JLabel("Blue HP: "));
@@ -291,6 +279,40 @@ public class GameDisruptor extends JPanel {
         rdAtkRange.setText(String.valueOf(RedRange));
         rdAtkRange.getDocument().addDocumentListener((SL) e -> {
             RedRange = Integer.parseInt(rdAtkRange.getText());
+        });
+        p1.add(rdAtkRange);
+
+        p1.add( new JLabel("Blue Move Time: "));
+        p1.add( new JLabel("Red Move Time: "));
+
+        JTextField blMoveTime = new JTextField();
+        blAtkRange.setText(String.valueOf(BlueMoveTime));
+        blAtkRange.getDocument().addDocumentListener((SL) e -> {
+            BlueMoveTime = Integer.parseInt(blMoveTime.getText());
+        });
+        p1.add(blAtkRange);
+
+        JTextField rdMoveTime = new JTextField();
+        rdAtkRange.setText(String.valueOf(RedMoveTime));
+        rdAtkRange.getDocument().addDocumentListener((SL) e -> {
+            RedMoveTime = Integer.parseInt(rdMoveTime.getText());
+        });
+        p1.add(rdAtkRange);
+
+        p1.add( new JLabel("Blue Attack Time: "));
+        p1.add( new JLabel("Red Attack Time: "));
+
+        JTextField blAttackTime = new JTextField();
+        blAtkRange.setText(String.valueOf(BlueAttackTime));
+        blAtkRange.getDocument().addDocumentListener((SL) e -> {
+            BlueAttackTime = Integer.parseInt(blAttackTime.getText());
+        });
+        p1.add(blAtkRange);
+
+        JTextField rdAttackTime = new JTextField();
+        rdAtkRange.setText(String.valueOf(RedRange));
+        rdAtkRange.getDocument().addDocumentListener((SL) e -> {
+            RedRange = Integer.parseInt(rdAttackTime.getText());
         });
         p1.add(rdAtkRange);
 
