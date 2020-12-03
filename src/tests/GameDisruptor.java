@@ -12,6 +12,8 @@ import ai.abstraction.pathfinding.NewStarPathFinding;
 import gui.PhysicalGameStatePanel;
 
 import java.awt.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
@@ -31,16 +33,22 @@ import static rts.units.UnitTypeTable.*;
  * @author jasnell
  */
 public class GameDisruptor extends JPanel {
-    private static int BlueHP = 20;
-    private static int BlueDamage = 10;
-    private static int BlueRange = 2;
-    private static int BlueMoveTime = 8;
-    private static int BlueAttackTime = 10;
-    private static int RedHP = 20;
-    private static int RedDamage = 10;
-    private static int RedRange = 2;
-    private static int RedMoveTime = 8;
-    private static int RedAttackTime = 10;
+    private static final int HP = 20;
+    private static final int DMG = 10;
+    private static final int RNG = 2;
+    private static final int MT = 8;
+    private static final int AT = 6;
+
+    private static int BlueHP = HP;
+    private static int BlueDamage = DMG;
+    private static int BlueRange = RNG;
+    private static int BlueMoveTime = MT;
+    private static int BlueAttackTime = AT;
+    private static int RedHP = HP;
+    private static int RedDamage = DMG;
+    private static int RedRange = RNG;
+    private static int RedMoveTime = MT;
+    private static int RedAttackTime = AT;
     private static int SimulationCount = 1000;
     private static boolean Running = false;
 
@@ -48,6 +56,7 @@ public class GameDisruptor extends JPanel {
     private static JLabel RedWins;
     private static JLabel Draws;
     private static JLabel BlueWinRate;
+    private static float WinRate;
 
     @FunctionalInterface
     public interface SL extends DocumentListener {
@@ -58,7 +67,7 @@ public class GameDisruptor extends JPanel {
             try {
                 update(e);
             } catch(Exception e1){
-                System.out.println(e1);
+                //System.out.println(e1);
             }
         }
         @Override
@@ -66,7 +75,7 @@ public class GameDisruptor extends JPanel {
             try {
                 update(e);
             } catch(Exception e1){
-                System.out.println(e1);
+                //System.out.println(e1);
             }
         }
         @Override
@@ -74,7 +83,7 @@ public class GameDisruptor extends JPanel {
             try {
                 update(e);
             } catch(Exception e1){
-                System.out.println(e1);
+                //System.out.println(e1);
             }
         }
     }
@@ -110,8 +119,8 @@ public class GameDisruptor extends JPanel {
         rlight.maxDamage = RedDamage;
         rlight.attackRange = RedRange;
         rlight.produceTime = 80;
-        rlight.moveTime = 8;
-        rlight.attackTime = 10;
+        rlight.moveTime = RedMoveTime;
+        rlight.attackTime = RedAttackTime;
         rlight.isResource = false;
         rlight.isStockpile = false;
         rlight.canHarvest = false;
@@ -180,7 +189,8 @@ public class GameDisruptor extends JPanel {
                     BlueWins.setText("Blue Wins: " + bWins);
                     RedWins.setText("Red Wins: " + rWins);
                     Draws.setText("Draws: " + draws);
-                    BlueWinRate.setText("Blue Win-rate: " + ((bWins + (draws / 2.0f)) / (float) (bWins + rWins + draws) * 100) + "%");
+                    WinRate = ((bWins + (draws / 2.0f)) / (float) (bWins + rWins + draws) * 100);
+                    BlueWinRate.setText("Blue Win-rate: " + WinRate + "%");
                 }
             } else {
                 JFrame w = PhysicalGameStatePanel.newVisualizer(gs, 768, 768, true, PhysicalGameStatePanel.COLORSCHEME_BLACK);
@@ -219,7 +229,8 @@ public class GameDisruptor extends JPanel {
             BlueWins.setText("Blue Wins: " + bWins);
             RedWins.setText("Red Wins: " + rWins);
             Draws.setText("Draws: " + draws);
-            BlueWinRate.setText("Blue Win-rate: " + ((bWins + (draws / 2.0f)) / (float) (bWins + rWins + draws) * 100) + "%");
+            WinRate = ((bWins + (draws / 2.0f)) / (float) (bWins + rWins + draws) * 100);
+            BlueWinRate.setText("Blue Win-rate: " + WinRate + "%");
         }
     }
 
@@ -228,7 +239,7 @@ public class GameDisruptor extends JPanel {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JPanel p1 = new JPanel();
-        p1.setLayout(new GridLayout(12,2));
+        p1.setLayout(new GridLayout(15,2));
         p1.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         p1.add( new JLabel("Blue HP: "));
@@ -286,35 +297,35 @@ public class GameDisruptor extends JPanel {
         p1.add( new JLabel("Red Move Time: "));
 
         JTextField blMoveTime = new JTextField();
-        blAtkRange.setText(String.valueOf(BlueMoveTime));
-        blAtkRange.getDocument().addDocumentListener((SL) e -> {
+        blMoveTime.setText(String.valueOf(BlueMoveTime));
+        blMoveTime.getDocument().addDocumentListener((SL) e -> {
             BlueMoveTime = Integer.parseInt(blMoveTime.getText());
         });
-        p1.add(blAtkRange);
+        p1.add(blMoveTime);
 
         JTextField rdMoveTime = new JTextField();
-        rdAtkRange.setText(String.valueOf(RedMoveTime));
-        rdAtkRange.getDocument().addDocumentListener((SL) e -> {
+        rdMoveTime.setText(String.valueOf(RedMoveTime));
+        rdMoveTime.getDocument().addDocumentListener((SL) e -> {
             RedMoveTime = Integer.parseInt(rdMoveTime.getText());
         });
-        p1.add(rdAtkRange);
+        p1.add(rdMoveTime);
 
         p1.add( new JLabel("Blue Attack Time: "));
         p1.add( new JLabel("Red Attack Time: "));
 
         JTextField blAttackTime = new JTextField();
-        blAtkRange.setText(String.valueOf(BlueAttackTime));
-        blAtkRange.getDocument().addDocumentListener((SL) e -> {
+        blAttackTime.setText(String.valueOf(BlueAttackTime));
+        blAttackTime.getDocument().addDocumentListener((SL) e -> {
             BlueAttackTime = Integer.parseInt(blAttackTime.getText());
         });
-        p1.add(blAtkRange);
+        p1.add(blAttackTime);
 
         JTextField rdAttackTime = new JTextField();
-        rdAtkRange.setText(String.valueOf(RedRange));
-        rdAtkRange.getDocument().addDocumentListener((SL) e -> {
-            RedRange = Integer.parseInt(rdAttackTime.getText());
+        rdAttackTime.setText(String.valueOf(RedAttackTime));
+        rdAttackTime.getDocument().addDocumentListener((SL) e -> {
+            RedAttackTime = Integer.parseInt(rdAttackTime.getText());
         });
-        p1.add(rdAtkRange);
+        p1.add(rdAttackTime);
 
         BlueWins = new JLabel("Blue Wins: ");
         RedWins = new JLabel("Red Wins: ");
@@ -329,7 +340,7 @@ public class GameDisruptor extends JPanel {
         p1.add( new JLabel("Simulation Count: "));
 
         JTextField simCount = new JTextField();
-        simCount.setText("1000");
+        simCount.setText(String.valueOf(SimulationCount));
         simCount.getDocument().addDocumentListener((SL) e -> {
             SimulationCount = Integer.parseInt(simCount.getText());
         });
@@ -377,6 +388,57 @@ public class GameDisruptor extends JPanel {
 
         p1.add(runPanel);
         p1.add(showPanel);
+
+        JButton evolveButton = new JButton("Evolve Disruption");
+        evolveButton.addActionListener(e -> {
+            if(Running == false){
+                Running = true;
+                new Thread(() -> {
+                    try {
+                        //RunSimulation(true);
+                        BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
+                        System.out.println("Evolve");
+
+                        String s = bufferRead.readLine();
+                        String[] individuals = s.split(" : ");
+                        float[][] chromosome = new float[individuals.length][10];
+                        for(int i = 0; i < individuals.length; i++){
+                            String[] geneString = individuals[i].split(", ");
+                            for(int k = 0; k < 10; k++) {
+                                chromosome[i][k] = Float.parseFloat(geneString[k]);
+                            }
+                        }
+
+                        String fitness = "";
+                        for(int i = 0; i < individuals.length; i++){
+                            BlueHP = HP+(int)(HP * chromosome[i][0] / 100);
+                            BlueDamage = DMG+(int)(DMG * chromosome[i][1] / 100);
+                            BlueRange = RNG+(int)(RNG * chromosome[i][2] / 100);
+                            BlueMoveTime = MT+(int)(MT * chromosome[i][3] / 100);
+                            BlueAttackTime = AT+(int)(AT * chromosome[i][4] / 100);
+
+                            RunSimulation(false);
+
+                            float sum = 1+Math.abs(chromosome[i][0]) + Math.abs(chromosome[i][1]) + Math.abs(chromosome[i][2]) + Math.abs(chromosome[i][3]) + Math.abs(chromosome[i][4]);
+                            fitness += WinRate/sum+" ";
+                        }
+
+                        System.out.println(fitness.trim());
+
+                    } catch (Exception e1){
+                        //System.out.println(e1);
+                    }
+
+                    Running = false;
+                }).start();
+            }
+        });
+
+        JPanel evolvePanel = new JPanel();
+        evolvePanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        evolvePanel.add(evolveButton);
+
+        p1.add(evolvePanel);
 
         frame.add(p1, BorderLayout.CENTER);
         frame.pack();
