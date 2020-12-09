@@ -8,10 +8,9 @@ import ai.abstraction.pathfinding.AStarPathFinding;
 import ai.core.AI;
 import ai.abstraction.pathfinding.PathFinding;
 import ai.core.ParameterSpecification;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+
+import java.util.*;
+
 import rts.GameState;
 import rts.PhysicalGameState;
 import rts.Player;
@@ -23,13 +22,20 @@ import rts.units.*;
  * @author ben, copied form "LightRush.java"
  */
 public class ChromoBot extends AbstractionLayerAI {
-    
+    public enum ChromoGoal {
+        DefendBlue,
+        AttackRed1,
+        AttackRed2,
+        AttackRed3
+    }
+
     Random r = new Random();
     protected UnitTypeTable utt;
     UnitType workerType;
     UnitType baseType;
     UnitType barracksType;
     UnitType lightType;
+    HashMap<String, ChromoGoal> unitGoals;
 
     // Strategy implemented by this class:
     // If we have any "light": send it to attack to the nearest enemy unit
@@ -38,13 +44,14 @@ public class ChromoBot extends AbstractionLayerAI {
     // If we have a worker: do this if needed: build base, build barracks, harvest resources
 
     public ChromoBot(UnitTypeTable a_utt) {
-        this(a_utt, new AStarPathFinding());
+        this(a_utt, new AStarPathFinding(), new HashMap());
     }
     
     
-    public ChromoBot(UnitTypeTable a_utt, PathFinding a_pf) {
+    public ChromoBot(UnitTypeTable a_utt, PathFinding a_pf, HashMap<String, ChromoGoal> unit_goals) {
         super(a_pf);
         reset(a_utt);
+        this.unitGoals = unit_goals;
     }
 
     public void reset() { // called once at beginning of game
@@ -64,7 +71,7 @@ public class ChromoBot extends AbstractionLayerAI {
     
 
     public AI clone() {
-        return new ChromoBot(utt, pf);
+        return new ChromoBot(utt, pf, unitGoals);
     }
 
     /*
@@ -166,20 +173,22 @@ public class ChromoBot extends AbstractionLayerAI {
                     closestDistance = d;
                 }
             } // TODO how to go for another base? it seems to when no enemy units from start
-            if (u2.getID() == 10 && u.getID() >= 2000 && u.getID() <= 2999) {
+            if (u2.getID() == 10 && unitGoals.containsKey(String.valueOf(u.getID())) && unitGoals.get(String.valueOf(u.getID())) == ChromoGoal.AttackRed1) {
                 targettedBase = u2;
-            } else if (u2.getID() == 30 && u.getID() >= 3000 && u.getID() <= 3999) {
+            } else if (u2.getID() == 30 && unitGoals.containsKey(String.valueOf(u.getID())) && unitGoals.get(String.valueOf(u.getID())) == ChromoGoal.AttackRed2) {
                 targettedBase = u2;
-            } else if (u2.getID() == 40 && u.getID() >= 4000 && u.getID() <= 4999) {
+            } else if (u2.getID() == 40 && unitGoals.containsKey(String.valueOf(u.getID())) && unitGoals.get(String.valueOf(u.getID())) == ChromoGoal.AttackRed3) {
+                targettedBase = u2;
+            } else if (u2.getID() == 20 && unitGoals.containsKey(String.valueOf(u.getID())) && unitGoals.get(String.valueOf(u.getID())) == ChromoGoal.DefendBlue) {
                 targettedBase = u2;
             }
         }
-        if (u.getID() >= 1000 && u.getID() <= 1999){
+        if (unitGoals.containsKey(String.valueOf(u.getID())) && unitGoals.get(String.valueOf(u.getID())) == ChromoGoal.DefendBlue){
             // ie we're defence so don't go too far TODO unless no mobile left?
             if ((Math.abs(closestEnemy.getX() - u.getX()) < 3) && (Math.abs(closestEnemy.getY() - u.getY()) < 3)) {
                 attack(u, closestEnemy);
             } else {
-                attack(u, null); // NOTE this stops it from going too far aflield
+                attack(u, targettedBase); // NOTE this stops it from going too far aflield
             }
         } else if ((Math.abs(closestEnemy.getX() - u.getX()) < 3) && (Math.abs(closestEnemy.getY() - u.getY()) < 3)) {
             // ie its too close, attack it
