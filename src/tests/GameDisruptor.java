@@ -14,6 +14,7 @@ import gui.PhysicalGameStatePanel;
 import java.awt.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
@@ -83,7 +84,7 @@ public class GameDisruptor extends JPanel {
             try {
                 update(e);
             } catch(Exception e1){
-                //System.out.println(e1);
+                //System.out.println(e1 );
             }
         }
     }
@@ -396,7 +397,7 @@ public class GameDisruptor extends JPanel {
                 new Thread(() -> {
                     try {
                         //RunSimulation(true);
-                        BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
+                        /*BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
                         System.out.println("Evolve");
 
                         String s = bufferRead.readLine();
@@ -423,7 +424,20 @@ public class GameDisruptor extends JPanel {
                             fitness += WinRate/sum+" ";
                         }
 
-                        System.out.println(fitness.trim());
+                        System.out.println(fitness.trim());*/
+                        ArrayList<Float> result = new ArrayList();
+
+                        for(int i = 0; i <= HP*2; i++){
+                            BlueHP = i;
+
+                            try {
+                                RunSimulation(false);
+                            } catch (Exception e1){
+                                System.out.println(e1);
+                            }
+
+                            System.out.println(WinRate);
+                        }
 
                     } catch (Exception e1){
                         //System.out.println(e1);
