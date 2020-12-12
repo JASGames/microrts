@@ -427,16 +427,21 @@ public class GameDisruptor extends JPanel {
                         System.out.println(fitness.trim());*/
                         ArrayList<Float> result = new ArrayList();
 
-                        for(int i = 0; i <= HP*2; i++){
-                            BlueHP = i;
+                        for(int i = 0; i <= MT*2; i++){
+                            for(int k = 0; k <= AT*2; k++) {
+                                BlueAttackTime = k;
+                                BlueMoveTime = i;
 
-                            try {
-                                RunSimulation(false);
-                            } catch (Exception e1){
-                                System.out.println(e1);
+                                try {
+                                    RunSimulation(false);
+                                } catch (Exception e1) {
+                                    System.out.println(e1);
+                                }
+
+                                System.out.print(WinRate+", ");
                             }
 
-                            System.out.println(WinRate);
+                            System.out.println();
                         }
 
                     } catch (Exception e1){
