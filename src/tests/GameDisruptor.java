@@ -409,25 +409,25 @@ public class GameDisruptor extends JPanel {
                                 break;
                             } else if(!s.isEmpty()) {
                                 String[] individuals = s.split(" : ");
-                                float[][] chromosome = new float[individuals.length][10];
+                                float[][] chromosome = new float[individuals.length][5];
                                 for (int i = 0; i < individuals.length; i++) {
                                     String[] geneString = individuals[i].split(", ");
-                                    for (int k = 0; k < 10; k++) {
+                                    for (int k = 0; k < 5; k++) {
                                         chromosome[i][k] = Float.parseFloat(geneString[k]);
                                     }
                                 }
 
                                 String fitness = "";
                                 for (int i = 0; i < individuals.length; i++) {
-                                    BlueHP = HP + (int) (HP * chromosome[i][0] / 100);
-                                    BlueDamage = DMG + (int) (DMG * chromosome[i][1] / 100);
-                                    BlueRange = RNG + (int) (RNG * chromosome[i][2] / 100);
-                                    BlueMoveTime = MT + (int) (MT * chromosome[i][3] / 100);
-                                    BlueAttackTime = AT + (int) (AT * chromosome[i][4] / 100);
+                                    BlueHP = HP + (int) (HP * chromosome[i][0] );
+                                    BlueDamage = DMG + (int) (DMG * chromosome[i][1] );
+                                    BlueRange = RNG + (int) (RNG * chromosome[i][2] );
+                                    BlueMoveTime = MT + (int) (MT * chromosome[i][3] );
+                                    BlueAttackTime = AT + (int) (AT * chromosome[i][4] );
 
                                     RunSimulation(false);
 
-                                    float sum = 1 + Math.abs(chromosome[i][0]) + Math.abs(chromosome[i][1]) + Math.abs(chromosome[i][2]) + Math.abs(chromosome[i][3]) + Math.abs(chromosome[i][4]);
+                                    //float sum = 1 + Math.abs(chromosome[i][0]) + Math.abs(chromosome[i][1]) + Math.abs(chromosome[i][2]) + Math.abs(chromosome[i][3]) + Math.abs(chromosome[i][4]);
                                     fitness += WinRate + " ";
                                 }
 
