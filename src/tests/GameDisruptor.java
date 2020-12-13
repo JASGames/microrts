@@ -396,56 +396,54 @@ public class GameDisruptor extends JPanel {
                 Running = true;
                 new Thread(() -> {
                     try {
-                        //RunSimulation(true);
-                        /*BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
+                        //RunSimulation(false);
+                        BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
                         System.out.println("Evolve");
 
-                        String s = bufferRead.readLine();
-                        String[] individuals = s.split(" : ");
-                        float[][] chromosome = new float[individuals.length][10];
-                        for(int i = 0; i < individuals.length; i++){
-                            String[] geneString = individuals[i].split(", ");
-                            for(int k = 0; k < 10; k++) {
-                                chromosome[i][k] = Float.parseFloat(geneString[k]);
-                            }
-                        }
 
-                        String fitness = "";
-                        for(int i = 0; i < individuals.length; i++){
-                            BlueHP = HP+(int)(HP * chromosome[i][0] / 100);
-                            BlueDamage = DMG+(int)(DMG * chromosome[i][1] / 100);
-                            BlueRange = RNG+(int)(RNG * chromosome[i][2] / 100);
-                            BlueMoveTime = MT+(int)(MT * chromosome[i][3] / 100);
-                            BlueAttackTime = AT+(int)(AT * chromosome[i][4] / 100);
+                        while(true) {
+                            String s = bufferRead.readLine();
 
-                            RunSimulation(false);
-
-                            float sum = 1+Math.abs(chromosome[i][0]) + Math.abs(chromosome[i][1]) + Math.abs(chromosome[i][2]) + Math.abs(chromosome[i][3]) + Math.abs(chromosome[i][4]);
-                            fitness += WinRate/sum+" ";
-                        }
-
-                        System.out.println(fitness.trim());*/
-                        ArrayList<Float> result = new ArrayList();
-
-                        for(int i = 0; i <= MT*2; i++){
-                            for(int k = 0; k <= AT*2; k++) {
-                                BlueAttackTime = k;
-                                BlueMoveTime = i;
-
-                                try {
-                                    RunSimulation(false);
-                                } catch (Exception e1) {
-                                    System.out.println(e1);
+                            if(s.contains("END")){
+                                System.out.println("FOUND END!");
+                                break;
+                            } else if(!s.isEmpty()) {
+                                String[] individuals = s.split(" : ");
+                                float[][] chromosome = new float[individuals.length][10];
+                                for (int i = 0; i < individuals.length; i++) {
+                                    String[] geneString = individuals[i].split(", ");
+                                    for (int k = 0; k < 10; k++) {
+                                        chromosome[i][k] = Float.parseFloat(geneString[k]);
+                                    }
                                 }
 
-                                System.out.print(WinRate+", ");
-                            }
+                                String fitness = "";
+                                for (int i = 0; i < individuals.length; i++) {
+                                    BlueHP = HP + (int) (HP * chromosome[i][0] / 100);
+                                    BlueDamage = DMG + (int) (DMG * chromosome[i][1] / 100);
+                                    BlueRange = RNG + (int) (RNG * chromosome[i][2] / 100);
+                                    BlueMoveTime = MT + (int) (MT * chromosome[i][3] / 100);
+                                    BlueAttackTime = AT + (int) (AT * chromosome[i][4] / 100);
 
-                            System.out.println();
+                                    RunSimulation(false);
+
+                                    float sum = 1 + Math.abs(chromosome[i][0]) + Math.abs(chromosome[i][1]) + Math.abs(chromosome[i][2]) + Math.abs(chromosome[i][3]) + Math.abs(chromosome[i][4]);
+                                    fitness += WinRate + " ";
+                                }
+
+                                System.out.println(fitness.trim());
+                                System.out.flush();
+                            }
                         }
 
                     } catch (Exception e1){
-                        //System.out.println(e1);
+                        System.out.print(e1);
+                        System.out.print(" ");
+                        for(StackTraceElement el : e1.getStackTrace()){
+                            System.out.print(el.toString());
+                            System.out.print(" ");
+                        }
+                        System.out.println();
                     }
 
                     Running = false;
