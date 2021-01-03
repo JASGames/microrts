@@ -409,21 +409,21 @@ public class GameDisruptor extends JPanel {
                                 break;
                             } else if(!s.isEmpty()) {
                                 String[] individuals = s.split(" : ");
-                                float[][] chromosome = new float[individuals.length][5];
+                                int[][] chromosome = new int[individuals.length][5];
                                 for (int i = 0; i < individuals.length; i++) {
                                     String[] geneString = individuals[i].split(", ");
                                     for (int k = 0; k < 5; k++) {
-                                        chromosome[i][k] = Float.parseFloat(geneString[k]);
+                                        chromosome[i][k] = Integer.parseInt(geneString[k]);
                                     }
                                 }
 
                                 String fitness = "";
                                 for (int i = 0; i < individuals.length; i++) {
-                                    BlueHP = HP + (int) (HP * chromosome[i][0] );
-                                    BlueDamage = DMG + (int) (DMG * chromosome[i][1] );
-                                    BlueRange = RNG + (int) (RNG * chromosome[i][2] );
-                                    BlueMoveTime = MT + (int) (MT * chromosome[i][3] );
-                                    BlueAttackTime = AT + (int) (AT * chromosome[i][4] );
+                                    BlueHP = chromosome[i][0];
+                                    BlueDamage = chromosome[i][1];
+                                    BlueRange = chromosome[i][2];
+                                    BlueMoveTime = chromosome[i][3];
+                                    BlueAttackTime = chromosome[i][4];
 
                                     RunSimulation(false);
 
