@@ -36,6 +36,7 @@ public class ChromoBot extends AbstractionLayerAI {
     UnitType barracksType;
     UnitType lightType;
     HashMap<String, ChromoGoal> unitGoals;
+    HashMap<ChromoGoal, int[]> baseLocations;
 
     // Strategy implemented by this class:
     // If we have any "light": send it to attack to the nearest enemy unit
@@ -44,14 +45,15 @@ public class ChromoBot extends AbstractionLayerAI {
     // If we have a worker: do this if needed: build base, build barracks, harvest resources
 
     public ChromoBot(UnitTypeTable a_utt) {
-        this(a_utt, new AStarPathFinding(), new HashMap());
+        this(a_utt, new AStarPathFinding(), new HashMap(), new HashMap());
     }
     
     
-    public ChromoBot(UnitTypeTable a_utt, PathFinding a_pf, HashMap<String, ChromoGoal> unit_goals) {
+    public ChromoBot(UnitTypeTable a_utt, PathFinding a_pf, HashMap<String, ChromoGoal> unit_goals, HashMap<ChromoGoal, int[]> base_loc) {
         super(a_pf);
         reset(a_utt);
         this.unitGoals = unit_goals;
+        this.baseLocations = base_loc;
     }
 
     public void reset() { // called once at beginning of game
@@ -71,7 +73,7 @@ public class ChromoBot extends AbstractionLayerAI {
     
 
     public AI clone() {
-        return new ChromoBot(utt, pf, unitGoals);
+        return new ChromoBot(utt, pf, unitGoals, baseLocations);
     }
 
     /*
@@ -183,7 +185,7 @@ public class ChromoBot extends AbstractionLayerAI {
                 targettedBase = u2;
             }
         }
-        if (unitGoals.containsKey(String.valueOf(u.getID())) && unitGoals.get(String.valueOf(u.getID())) == ChromoGoal.DefendBlue){
+        if (unitGoals.containsKey(String.valueOf(u.getID())) && unitGoals.get(String.valueOf(u.getID())) == ChromoGoal.DefendBlue && targettedBase != null){
             // ie we're defence so don't go too far TODO unless no mobile left?
             if ((Math.abs(closestEnemy.getX() - u.getX()) < 3) && (Math.abs(closestEnemy.getY() - u.getY()) < 3)) {
                 attack(u, closestEnemy);
@@ -197,9 +199,47 @@ public class ChromoBot extends AbstractionLayerAI {
             // otherwise attack assigned base
             attack(u, targettedBase);
         } else {
-            attack(u, null);
+            //attack(u, null);
             // TODO another base?
             //attack(u, closestEnemy);
+            if(unitGoals.containsKey(String.valueOf(u.getID()))){
+                ChromoGoal unitGoal =  unitGoals.get(String.valueOf(u.getID()));
+                Unit atGoal = pgs.getUnitAt(baseLocations.get(unitGoal)[0], baseLocations.get(unitGoal)[1]);
+                Collection<Unit> unitsAroundGoal = pgs.getUnitsAround(baseLocations.get(unitGoal)[0], baseLocations.get(unitGoal)[1], 3);
+
+                if(atGoal == null) {
+                    move(u, baseLocations.get(unitGoal)[0], baseLocations.get(unitGoal)[1]);
+                } else{
+                    double closest = 1000000;
+                    Unit closeUnit = null;
+                    for(Unit u2 : unitsAroundGoal){
+                        int difx = Math.abs(u.getX()-u2.getX());
+                        int dify = Math.abs(u.getY()-u2.getY());
+
+                        double distance = Math.sqrt((difx*difx)+(dify+dify));
+
+                        if(distance < closest){
+                            closeUnit = u2;
+                            closest = distance;
+                        }
+                    }
+
+                    if(closeUnit != null){
+                        attack(u, closeUnit);
+                    }else{
+                        move(u, baseLocations.get(unitGoal)[0], baseLocations.get(unitGoal)[1]);
+                    }
+                }
+            }else{
+                Unit unitAtDef = pgs.getUnitAt(baseLocations.get(ChromoGoal.DefendBlue)[0], baseLocations.get(ChromoGoal.DefendBlue)[1]);
+                if(unitAtDef != null) {
+                    attack(u, unitAtDef);
+                } else {
+                    attack(u, null);
+                }
+
+            }
+
         }
     }
 
