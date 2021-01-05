@@ -130,7 +130,7 @@ public class GameDisruptor extends JPanel {
         rlight.sightRadius = 2;
         utt.addUnitType(rlight);
 
-        String map = "C:\\Users\\jasnell\\OneDrive - Edith Cowan University\\Documents\\even_map.xml";
+        String map = "C:\\Users\\jakes\\Documents\\even_map.xml";
 
         int bWins = 0;
         int rWins = 0;
