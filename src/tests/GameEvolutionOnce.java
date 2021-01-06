@@ -56,6 +56,13 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
         float lightSum = priorities[p][0] + priorities[p][3] + priorities[p][6] + priorities[p][9];
         float heavySum = priorities[p][1] + priorities[p][4] + priorities[p][7] + priorities[p][10];
         float rangedSum = priorities[p][2] + priorities[p][5] + priorities[p][8] + priorities[p][11];
+        /*System.out.println("Light: "+light);
+        System.out.println("Heavy: "+heavy);
+        System.out.println("Ranged: "+ranged);
+
+        System.out.println("Light Sum: "+lightSum);
+        System.out.println("Heavy Sum: "+heavySum);
+        System.out.println("Ranged Sum: "+rangedSum);*/
 
         int lblueDef = (int)Math.floor(light * priorities[p][0] / lightSum);
         int lredAtk1 = (int)Math.floor(light * priorities[p][3] / lightSum);
@@ -92,6 +99,8 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
             }
         }
 
+        //System.out.println("Light Placed After Remainder: "+(lblueDef + lredAtk1 + lredAtk2 + lredAtk3));
+
         units[0][0] = lblueDef;
         units[1][0] = lredAtk1;
         units[2][0] = lredAtk2;
@@ -103,6 +112,8 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
         int hredAtk3 = (int)Math.floor(heavy * priorities[p][10] / heavySum);
 
         int heavyLeft = heavy - (hblueDef + hredAtk1 + hredAtk2 + hredAtk3);
+        //System.out.println("Heavy Left: "+heavyLeft);
+        //System.out.println("Heavy Placed: "+(hblueDef + hredAtk1 + hredAtk2 + hredAtk3));
         List<Float> heavyRemainders = new ArrayList();
         heavyRemainders.add(((heavy * priorities[p][1] / heavySum) - hblueDef)+heavyLeft);
         heavyRemainders.add(((heavy * priorities[p][4] / heavySum) - hredAtk1)+heavyLeft);
@@ -130,6 +141,8 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
             }
         }
 
+        //System.out.println("Heavy Placed After Remainder: "+(hblueDef + hredAtk1 + hredAtk2 + hredAtk3));
+
         units[0][1] = hblueDef;
         units[1][1] = hredAtk1;
         units[2][1] = hredAtk2;
@@ -141,6 +154,8 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
         int rredAtk3 = (int)Math.floor(ranged * priorities[p][11] / rangedSum);
 
         int rangedLeft = ranged - (rblueDef + rredAtk1 + rredAtk2 + rredAtk3);
+        //System.out.println("Ranged Left: "+rangedLeft);
+        //System.out.println("Ranged Placed: "+(rblueDef + rredAtk1 + rredAtk2 + rredAtk3));
         List<Float> rangedRemainders = new ArrayList();
         rangedRemainders.add(((ranged * priorities[p][2] / rangedSum) - rblueDef)+rangedLeft);
         rangedRemainders.add(((ranged * priorities[p][5] / rangedSum) - rredAtk1)+rangedLeft);
@@ -148,7 +163,7 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
         rangedRemainders.add(((ranged * priorities[p][11] / rangedSum) - rredAtk3)+rangedLeft);
 
 
-        for(int i = 0; i < heavyLeft; i++){
+        for(int i = 0; i < rangedLeft; i++){
             float highest = 0;
             int index = 0;
             for(int r = 0; r < rangedRemainders.size(); r++){
@@ -167,6 +182,8 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                 case 3: rredAtk3 += 1; break;
             }
         }
+
+        //System.out.println("Ranged Placed After Remainder: "+(rblueDef + rredAtk1 + rredAtk2 + rredAtk3));
 
         units[0][2] = rblueDef;
         units[1][2] = rredAtk1;
