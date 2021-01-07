@@ -58,6 +58,14 @@ public class GameDisruptor extends JPanel {
     private static JLabel Draws;
     private static JLabel BlueWinRate;
     private static float WinRate;
+    private static float TargetWinRate = 100f;
+
+    private static float WinWeight = 1.0f;
+    private static float ChangeWeight = 0.0f;
+
+    private static int CurrentDraws = 0;
+    private static int CurrentBWins = 0;
+    private static int CurrentRWins = 0;
 
     @FunctionalInterface
     public interface SL extends DocumentListener {
@@ -89,7 +97,7 @@ public class GameDisruptor extends JPanel {
         }
     }
 
-    public static void RunSimulation(boolean display) throws Exception {
+    public static void RunSimulation(boolean display, int threadsToUse) throws Exception {
         UnitTypeTable utt = new UnitTypeTable(VERSION_ORIGINAL, MOVE_CONFLICT_RESOLUTION_CANCEL_BOTH);
 
         //BlueLight
@@ -130,17 +138,13 @@ public class GameDisruptor extends JPanel {
         rlight.sightRadius = 2;
         utt.addUnitType(rlight);
 
-        String map = "C:\\Users\\jakes\\Documents\\even_map.xml";
+        String map = "C:\\Users\\jasnell\\OneDrive - Edith Cowan University\\Documents\\even_map.xml";
 
-        int bWins = 0;
-        int rWins = 0;
-        int draws = 0;
-        int runs = SimulationCount;
+        CurrentBWins = 0;
+        CurrentRWins = 0;
+        CurrentDraws = 0;
 
-        if(display)
-            runs = 1;
-
-        for(int i = 0; i < runs; i++) {
+        if(display){
             // Setup game conditions
             PhysicalGameState pgs = PhysicalGameState.load(map, utt); // even_map.xml", utt);
             //Update unit health to match stats
@@ -162,7 +166,64 @@ public class GameDisruptor extends JPanel {
             AI ai1 = new LightRush(utt, new NewStarPathFinding());
             AI ai2 = new LightRush(utt, new NewStarPathFinding());
 
-            if (!display) {
+            JFrame w = PhysicalGameStatePanel.newVisualizer(gs, 768, 768, true, PhysicalGameStatePanel.COLORSCHEME_BLACK);
+
+            long nextTimeToUpdate = System.currentTimeMillis() + PERIOD;
+            do {
+                if (System.currentTimeMillis() >= nextTimeToUpdate) {
+                    PlayerAction pa1 = ai1.getAction(0, gs);
+                    PlayerAction pa2 = ai2.getAction(1, gs);
+
+                    gs.issueSafe(pa1);
+                    gs.issueSafe(pa2);
+
+                    // simulate:
+                    gameover = gs.cycle();
+                    w.repaint();
+                    nextTimeToUpdate += PERIOD;
+                } else {
+                    try {
+                        Thread.sleep(1);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                if(w.isVisible() == false) {
+                    gameover = true;
+                    Running = false;
+                }
+            } while (!gameover && gs.getTime() < MAXCYCLES);
+            w.dispose();
+        } else if(threadsToUse == 1){
+            int runs = SimulationCount;
+            int bWins = 0;
+            int rWins = 0;
+            int draws = 0;
+
+            for(int i = 0; i < runs; i++) {
+                // Setup game conditions
+                PhysicalGameState pgs = PhysicalGameState.load(map, utt);
+
+                //Update unit health to match stats
+                for (Unit unit : pgs.getUnits()) {
+                    if (unit.getType() == blight) {
+                        unit.setHitPoints(blight.hp);
+                    } else if (unit.getType() == rlight) {
+                        unit.setHitPoints(rlight.hp);
+                    }
+                }
+                GameState gs = new GameState(pgs, utt);
+
+                int MAXCYCLES = 350; // Maximum game length
+                int PERIOD = 25; // Refresh rate for display (milliseconds)
+
+                boolean gameover = false;
+
+                // Set the AIs
+                AI ai1 = new LightRush(utt, new NewStarPathFinding());
+                AI ai2 = new LightRush(utt, new NewStarPathFinding());
+
                 do {
                     PlayerAction pa1 = ai1.getAction(0, gs);
                     PlayerAction pa2 = ai2.getAction(1, gs);
@@ -177,60 +238,115 @@ public class GameDisruptor extends JPanel {
                 ai2.gameOver(gs.winner());
 
                 int result = gs.winner();
-                if(result == -1)
-                {
+                if (result == -1) {
                     draws++;
-                } else if(result == 0) {
+                } else if (result == 0) {
                     bWins++;
-                } else if(result == 1) {
+                } else if (result == 1) {
                     rWins++;
                 }
+            }
 
-                if(i % 100 == 0) {
-                    BlueWins.setText("Blue Wins: " + bWins);
-                    RedWins.setText("Red Wins: " + rWins);
-                    Draws.setText("Draws: " + draws);
-                    WinRate = ((bWins + (draws / 2.0f)) / (float) (bWins + rWins + draws) * 100);
-                    BlueWinRate.setText("Blue Win-rate: " + WinRate + "%");
-                }
-            } else {
-                JFrame w = PhysicalGameStatePanel.newVisualizer(gs, 768, 768, true, PhysicalGameStatePanel.COLORSCHEME_BLACK);
+            CurrentDraws += draws;
+            CurrentBWins += bWins;
+            CurrentRWins += rWins;
+        } else {
+            ArrayList<Thread> threadList = new ArrayList<Thread>();
 
-                long nextTimeToUpdate = System.currentTimeMillis() + PERIOD;
-                do {
-                    if (System.currentTimeMillis() >= nextTimeToUpdate) {
-                        PlayerAction pa1 = ai1.getAction(0, gs);
-                        PlayerAction pa2 = ai2.getAction(1, gs);
+            // Spin up multiple simulations across multiple threads
+            for(int t = 0; t < threadsToUse; t++) {
+                Thread thread = new Thread(() -> {
+                    int runs = (int)Math.ceil(SimulationCount/threadsToUse);
+                    int bWins = 0;
+                    int rWins = 0;
+                    int draws = 0;
 
-                        gs.issueSafe(pa1);
-                        gs.issueSafe(pa2);
-
-                        // simulate:
-                        gameover = gs.cycle();
-                        w.repaint();
-                        nextTimeToUpdate += PERIOD;
-                    } else {
+                    for(int i = 0; i < runs; i++){
                         try {
-                            Thread.sleep(1);
+                            // Setup game conditions
+                            PhysicalGameState pgs = PhysicalGameState.load(map, utt);
+
+                            //Update unit health to match stats
+                            for (Unit unit : pgs.getUnits()) {
+                                if (unit.getType() == blight) {
+                                    unit.setHitPoints(blight.hp);
+                                } else if (unit.getType() == rlight) {
+                                    unit.setHitPoints(rlight.hp);
+                                }
+                            }
+                            GameState gs = new GameState(pgs, utt);
+
+                            int MAXCYCLES = 350; // Maximum game length
+                            int PERIOD = 25; // Refresh rate for display (milliseconds)
+
+                            boolean gameover = false;
+
+                            // Set the AIs
+                            AI ai1 = new LightRush(utt, new NewStarPathFinding());
+                            AI ai2 = new LightRush(utt, new NewStarPathFinding());
+
+                            do {
+                                PlayerAction pa1 = ai1.getAction(0, gs);
+                                PlayerAction pa2 = ai2.getAction(1, gs);
+                                gs.issueSafe(pa1);
+                                gs.issueSafe(pa2);
+
+                                // simulate:
+                                gameover = gs.cycle();
+                            } while (!gameover && gs.getTime() < MAXCYCLES);
+
+                            ai1.gameOver(gs.winner()); // TODO what do these do?
+                            ai2.gameOver(gs.winner());
+
+                            int result = gs.winner();
+                            if (result == -1) {
+                                draws++;
+                            } else if (result == 0) {
+                                bWins++;
+                            } else if (result == 1) {
+                                rWins++;
+                            }
+
+                            /*if (i % 100 == 0) {
+                                BlueWins.setText("Blue Wins: " + bWins);
+                                RedWins.setText("Red Wins: " + rWins);
+                                Draws.setText("Draws: " + draws);
+                                WinRate = ((bWins + (draws / 2.0f)) / (float) (bWins + rWins + draws) * 100);
+                                BlueWinRate.setText("Blue Win-rate: " + WinRate + "%");
+                            }*/
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
 
-                    if(w.isVisible() == false) {
-                        gameover = true;
-                        Running = false;
+                    CurrentDraws += draws;
+                    CurrentBWins += bWins;
+                    CurrentRWins += rWins;
+                });
+
+                //Keep track of the thread and start it
+                threadList.add(thread);
+                thread.start();
+            }
+
+            while(threadList.size() > 0){
+                for(int i = 0; i < threadList.size(); i++){
+                    if(threadList.get(i).getState() == Thread.State.TERMINATED){
+                        threadList.remove(threadList.get(i));
                     }
-                } while (!gameover && gs.getTime() < MAXCYCLES);
-                w.dispose();
+                }
+
+                Thread.sleep(5);
             }
         }
 
+
+
         if(!display) {
-            BlueWins.setText("Blue Wins: " + bWins);
-            RedWins.setText("Red Wins: " + rWins);
-            Draws.setText("Draws: " + draws);
-            WinRate = ((bWins + (draws / 2.0f)) / (float) (bWins + rWins + draws) * 100);
+            BlueWins.setText("Blue Wins: " + CurrentBWins);
+            RedWins.setText("Red Wins: " + CurrentRWins);
+            Draws.setText("Draws: " + CurrentDraws);
+            WinRate = ((CurrentBWins + (CurrentDraws / 2.0f)) / (float) (CurrentBWins + CurrentRWins + CurrentDraws) * 100);
             BlueWinRate.setText("Blue Win-rate: " + WinRate + "%");
         }
     }
@@ -240,11 +356,10 @@ public class GameDisruptor extends JPanel {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JPanel p1 = new JPanel();
-        p1.setLayout(new GridLayout(15,2));
+        p1.setLayout(new GridLayout(10,4));
         p1.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         p1.add( new JLabel("Blue HP: "));
-        p1.add( new JLabel("Red HP: "));
 
         JTextField blHP = new JTextField();
         blHP.setText(String.valueOf(BlueHP));
@@ -252,6 +367,8 @@ public class GameDisruptor extends JPanel {
             BlueHP = Integer.parseInt(blHP.getText());
         });
         p1.add(blHP);
+
+        p1.add( new JLabel("Red HP: "));
 
         JTextField rdHP = new JTextField();
         rdHP.setText(String.valueOf(RedHP));
@@ -261,7 +378,6 @@ public class GameDisruptor extends JPanel {
         p1.add(rdHP);
 
         p1.add( new JLabel("Blue Attack: "));
-        p1.add( new JLabel("Red Attack: "));
 
         JTextField blAtk = new JTextField();
         blAtk.setText(String.valueOf(BlueDamage));
@@ -269,6 +385,8 @@ public class GameDisruptor extends JPanel {
             BlueDamage = Integer.parseInt(blAtk.getText());
         });
         p1.add(blAtk);
+
+        p1.add( new JLabel("Red Attack: "));
 
         JTextField rdAtk = new JTextField();
         rdAtk.setText(String.valueOf(RedDamage));
@@ -278,7 +396,6 @@ public class GameDisruptor extends JPanel {
         p1.add(rdAtk);
 
         p1.add( new JLabel("Blue Attack Range: "));
-        p1.add( new JLabel("Red Attack Range: "));
 
         JTextField blAtkRange = new JTextField();
         blAtkRange.setText(String.valueOf(BlueRange));
@@ -286,6 +403,8 @@ public class GameDisruptor extends JPanel {
             BlueRange = Integer.parseInt(blAtkRange.getText());
         });
         p1.add(blAtkRange);
+
+        p1.add( new JLabel("Red Attack Range: "));
 
         JTextField rdAtkRange = new JTextField();
         rdAtkRange.setText(String.valueOf(RedRange));
@@ -295,7 +414,6 @@ public class GameDisruptor extends JPanel {
         p1.add(rdAtkRange);
 
         p1.add( new JLabel("Blue Move Time: "));
-        p1.add( new JLabel("Red Move Time: "));
 
         JTextField blMoveTime = new JTextField();
         blMoveTime.setText(String.valueOf(BlueMoveTime));
@@ -303,6 +421,8 @@ public class GameDisruptor extends JPanel {
             BlueMoveTime = Integer.parseInt(blMoveTime.getText());
         });
         p1.add(blMoveTime);
+
+        p1.add( new JLabel("Red Move Time: "));
 
         JTextField rdMoveTime = new JTextField();
         rdMoveTime.setText(String.valueOf(RedMoveTime));
@@ -312,7 +432,6 @@ public class GameDisruptor extends JPanel {
         p1.add(rdMoveTime);
 
         p1.add( new JLabel("Blue Attack Time: "));
-        p1.add( new JLabel("Red Attack Time: "));
 
         JTextField blAttackTime = new JTextField();
         blAttackTime.setText(String.valueOf(BlueAttackTime));
@@ -320,6 +439,8 @@ public class GameDisruptor extends JPanel {
             BlueAttackTime = Integer.parseInt(blAttackTime.getText());
         });
         p1.add(blAttackTime);
+
+        p1.add( new JLabel("Red Attack Time: "));
 
         JTextField rdAttackTime = new JTextField();
         rdAttackTime.setText(String.valueOf(RedAttackTime));
@@ -353,7 +474,7 @@ public class GameDisruptor extends JPanel {
                 Running = true;
                 new Thread(() -> {
                     try {
-                        RunSimulation(false);
+                        RunSimulation(false, Runtime.getRuntime().availableProcessors()+2);
                     } catch (Exception e1){
                         System.out.println(e1);
                     }
@@ -373,7 +494,7 @@ public class GameDisruptor extends JPanel {
                 Running = true;
                 new Thread(() -> {
                     try {
-                        RunSimulation(true);
+                        RunSimulation(true, 1);
                     } catch (Exception e1){
                         System.out.println(e1);
                     }
@@ -390,7 +511,16 @@ public class GameDisruptor extends JPanel {
         p1.add(runPanel);
         p1.add(showPanel);
 
-        JButton evolveButton = new JButton("Evolve Disruption");
+        p1.add( new JLabel("Target Win-rate: "));
+
+        JTextField targetWinRate = new JTextField();
+        targetWinRate.setText(String.valueOf(TargetWinRate));
+        targetWinRate.getDocument().addDocumentListener((SL) e -> {
+            TargetWinRate = Float.parseFloat(targetWinRate.getText());
+        });
+        p1.add(targetWinRate);
+
+        JButton evolveButton = new JButton("Evolve");
         evolveButton.addActionListener(e -> {
             if(Running == false){
                 Running = true;
@@ -425,10 +555,11 @@ public class GameDisruptor extends JPanel {
                                     BlueMoveTime = chromosome[i][3];
                                     BlueAttackTime = chromosome[i][4];
 
-                                    RunSimulation(false);
+                                    RunSimulation(false, Runtime.getRuntime().availableProcessors()+2);
 
-                                    //float sum = 1 + Math.abs(chromosome[i][0]) + Math.abs(chromosome[i][1]) + Math.abs(chromosome[i][2]) + Math.abs(chromosome[i][3]) + Math.abs(chromosome[i][4]);
-                                    fitness += WinRate + " ";
+                                    float changed = (5.0f - (Math.abs(1.0f - ((float)chromosome[i][0]/HP)) + Math.abs(1.0f - ((float)chromosome[i][1]/DMG)) + Math.abs(1.0f - ((float)chromosome[i][2]/RNG)) + Math.abs(1.0f - ((float)chromosome[i][3]/MT)) + Math.abs(1.0f - ((float)chromosome[i][4]/AT)))) / 5.0f;
+                                    float tWinRate = (100-Math.abs(WinRate-75f)) / 100f;
+                                    fitness += ((tWinRate*WinWeight) + (changed*ChangeWeight)) + " ";
                                 }
 
                                 System.out.println(fitness.trim());
@@ -456,6 +587,26 @@ public class GameDisruptor extends JPanel {
         evolvePanel.add(evolveButton);
 
         p1.add(evolvePanel);
+
+        p1.add(new Panel());
+
+        p1.add( new JLabel("Win-rate Weight: "));
+
+        JTextField winRateWeight = new JTextField();
+        winRateWeight.setText(String.valueOf(WinWeight));
+        winRateWeight.getDocument().addDocumentListener((SL) e -> {
+            WinWeight = Float.parseFloat(winRateWeight.getText());
+        });
+        p1.add(winRateWeight);
+
+        p1.add( new JLabel("Changed Weight: "));
+
+        JTextField changedWeight = new JTextField();
+        changedWeight.setText(String.valueOf(ChangeWeight));
+        changedWeight.getDocument().addDocumentListener((SL) e -> {
+            ChangeWeight = Float.parseFloat(changedWeight.getText());
+        });
+        p1.add(changedWeight);
 
         frame.add(p1, BorderLayout.CENTER);
         frame.pack();
