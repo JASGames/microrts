@@ -13,13 +13,19 @@ import gui.PhysicalGameStatePanel;
 
 import java.awt.*;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.jdom.*;
+
+import org.jdom.input.SAXBuilder;
 import rts.GameState;
 import rts.PhysicalGameState;
 import rts.PlayerAction;
@@ -66,6 +72,8 @@ public class GameDisruptor extends JPanel {
     private static int CurrentDraws = 0;
     private static int CurrentBWins = 0;
     private static int CurrentRWins = 0;
+
+    public static Element MapXML;
 
     @FunctionalInterface
     public interface SL extends DocumentListener {
@@ -146,7 +154,7 @@ public class GameDisruptor extends JPanel {
 
         if(display){
             // Setup game conditions
-            PhysicalGameState pgs = PhysicalGameState.load(map, utt); // even_map.xml", utt);
+            PhysicalGameState pgs = PhysicalGameState.fromXML(MapXML, utt);
             //Update unit health to match stats
             for(Unit unit : pgs.getUnits()){
                 if(unit.getType() == blight){
@@ -203,7 +211,8 @@ public class GameDisruptor extends JPanel {
 
             for(int i = 0; i < runs; i++) {
                 // Setup game conditions
-                PhysicalGameState pgs = PhysicalGameState.load(map, utt);
+                PhysicalGameState pgs = PhysicalGameState.fromXML(MapXML, utt);
+                //PhysicalGameState pgs = PhysicalGameState.load(map, utt);
 
                 //Update unit health to match stats
                 for (Unit unit : pgs.getUnits()) {
@@ -264,7 +273,8 @@ public class GameDisruptor extends JPanel {
                     for(int i = 0; i < runs; i++){
                         try {
                             // Setup game conditions
-                            PhysicalGameState pgs = PhysicalGameState.load(map, utt);
+                            PhysicalGameState pgs = PhysicalGameState.fromXML(MapXML, utt);
+                            //PhysicalGameState pgs = PhysicalGameState.load(map, utt);
 
                             //Update unit health to match stats
                             for (Unit unit : pgs.getUnits()) {
@@ -352,6 +362,11 @@ public class GameDisruptor extends JPanel {
     }
 
     public static void main(String[] args) throws Exception {
+        File file = new File("C:\\Users\\jasnell\\OneDrive - Edith Cowan University\\Documents\\even_map.xml");
+        SAXBuilder saxBuilder = new SAXBuilder();
+        Document document = saxBuilder.build(file);
+        MapXML = document.getRootElement();
+
         JFrame frame = new JFrame("microRTS Game Disruptor");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -474,7 +489,7 @@ public class GameDisruptor extends JPanel {
                 Running = true;
                 new Thread(() -> {
                     try {
-                        RunSimulation(false, Runtime.getRuntime().availableProcessors()+2);
+                        RunSimulation(false, Runtime.getRuntime().availableProcessors());
                     } catch (Exception e1){
                         System.out.println(e1);
                     }
@@ -555,7 +570,7 @@ public class GameDisruptor extends JPanel {
                                     BlueMoveTime = chromosome[i][3];
                                     BlueAttackTime = chromosome[i][4];
 
-                                    RunSimulation(false, Runtime.getRuntime().availableProcessors()+2);
+                                    RunSimulation(false, Runtime.getRuntime().availableProcessors());
 
                                     float changed = (5.0f - (Math.abs(1.0f - ((float)chromosome[i][0]/HP)) + Math.abs(1.0f - ((float)chromosome[i][1]/DMG)) + Math.abs(1.0f - ((float)chromosome[i][2]/RNG)) + Math.abs(1.0f - ((float)chromosome[i][3]/MT)) + Math.abs(1.0f - ((float)chromosome[i][4]/AT)))) / 5.0f;
                                     float tWinRate = (100-Math.abs(WinRate-TargetWinRate)) / 100f;
