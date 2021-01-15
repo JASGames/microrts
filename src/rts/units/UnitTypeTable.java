@@ -189,7 +189,7 @@ public class UnitTypeTable  {
         UnitType light = new UnitType();
         light.name = "Light";
         light.cost = 2;
-        light.hp = 4;
+        light.hp = 8;
         switch(version) {
             case VERSION_ORIGINAL:
             case VERSION_ORIGINAL_FINETUNED:
@@ -230,7 +230,7 @@ public class UnitTypeTable  {
         switch(version) {
             case VERSION_ORIGINAL: 
                 heavy.moveTime = 12;
-                heavy.hp = 4;
+                heavy.hp = 8;
                 heavy.cost = 2;
                 break;
             case VERSION_ORIGINAL_FINETUNED: 
@@ -253,7 +253,7 @@ public class UnitTypeTable  {
         UnitType ranged = new UnitType();
         ranged.name = "Ranged";
         ranged.cost = 2;
-        ranged.hp = 1;
+        ranged.hp = 2;
         switch(version) {
             case VERSION_ORIGINAL:
             case VERSION_ORIGINAL_FINETUNED:

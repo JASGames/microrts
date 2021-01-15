@@ -207,7 +207,7 @@ public class ChromoBot extends AbstractionLayerAI {
                 Unit atGoal = pgs.getUnitAt(baseLocations.get(unitGoal)[0], baseLocations.get(unitGoal)[1]);
                 Collection<Unit> unitsAroundGoal = pgs.getUnitsAround(baseLocations.get(unitGoal)[0], baseLocations.get(unitGoal)[1], 3);
 
-                if(atGoal == null) {
+                if(atGoal == null || atGoal.getPlayer() == 0) {
                     move(u, baseLocations.get(unitGoal)[0], baseLocations.get(unitGoal)[1]);
                 } else{
                     double closest = 1000000;
@@ -224,7 +224,7 @@ public class ChromoBot extends AbstractionLayerAI {
                         }
                     }
 
-                    if(closeUnit != null){
+                    if(closeUnit != null && closeUnit.getPlayer() != 0){
                         attack(u, closeUnit);
                     }else{
                         move(u, baseLocations.get(unitGoal)[0], baseLocations.get(unitGoal)[1]);

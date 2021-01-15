@@ -261,7 +261,8 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
     }
 
     public static void main(String[] args) throws Exception {
-        UnitTypeTable utt = new UnitTypeTable();
+        UnitTypeTable utt = new UnitTypeTable(UnitTypeTable.VERSION_ORIGINAL, UnitTypeTable.MOVE_CONFLICT_RESOLUTION_CANCEL_ALTERNATING);
+
         String map = args[0];
         int MAXCYCLES = Integer.parseInt(args[1]);
         Boolean display = false; // Display battle?
@@ -320,6 +321,17 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                 // Setup game conditions
                 PhysicalGameState pgs = PhysicalGameState.load(map, utt); // TwoBasesBarracks16x16.xml", utt);
                 GameState gs = new GameState(pgs, utt);
+
+                for(Unit u: pgs.getUnits()){
+                    if(u.getType().name == "Light"){
+                        u.setHitPoints(8);
+                    } else if(u.getType().name == "Heavy"){
+                        u.setHitPoints(8);
+                    } else if(u.getType().name == "Ranged"){
+                        u.setHitPoints(2);
+                    }
+                }
+
                 //int MAXCYCLES = 1000; // Maximum game length
                 int PERIOD = 15; // Refresh rate for display (milliseconds)
                 boolean gameover = false;
@@ -339,7 +351,7 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                 }
 
                 // Set the AIs
-                AI ai1 = new ChromoBot(utt, new NewStarPathFinding(), UnitTotals, baseLocations);
+                AI ai1 = new ChromoBot(utt,  new NewStarPathFinding(), UnitTotals, baseLocations);
                 AI ai2 = new DefendBase(utt, new NewStarPathFinding());
 
                 // Create a trace for saving the game
@@ -646,6 +658,11 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
 
                             gs.issueSafe(pa1);
                             gs.issueSafe(pa2);
+
+                            /*for(Unit u : gs.getUnits()){
+                                if(u.getPlayer()== 0)
+                                    System.out.println(u.getID()+":"+u.getUnitActions(gs));
+                            }*/
 
                             // simulate:
                             gameover = gs.cycle();

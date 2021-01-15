@@ -140,7 +140,7 @@ public class DefendBase extends AbstractionLayerAI {
         int mybase = 0;
         Unit closestBase = null;
         for (Unit u2 : pgs.getUnits()) {
-            if (u2.getPlayer() >= 0 && u2.getPlayer() != p.getID()) {
+            if (u2.getPlayer() != p.getID()) {
                 int d = Math.abs(u2.getX() - u.getX()) + Math.abs(u2.getY() - u.getY());
                 if (closestEnemy == null || d < closestDistance) {
                     closestEnemy = u2;
@@ -150,13 +150,15 @@ public class DefendBase extends AbstractionLayerAI {
             else if(u2.getPlayer()==p.getID() && u2.getType() == baseType)
             {
                 int d2 = Math.abs(u2.getX() - u.getX()) + Math.abs(u2.getY() - u.getY());
-                if((closestBase == null && d2 < 10) || d2 < mybase) {
+                if(closestBase == null || d2 < mybase) {
                     mybase = d2;
                     closestBase = u2;
                 }
             }
         }
         if (closestEnemy!=null && closestDistance < 8 && (closestBase == null || mybase < 8)) {
+            attack(u,closestEnemy);
+        } else if(closestEnemy != null && closestDistance < 4){
             attack(u,closestEnemy);
         }
         else

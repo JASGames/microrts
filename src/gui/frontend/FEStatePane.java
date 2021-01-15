@@ -7,6 +7,7 @@
 package gui.frontend;
 
 import ai.BranchingFactorCalculatorBigInteger;
+import ai.abstraction.pathfinding.*;
 import ai.core.AI;
 import ai.core.AIWithComputationBudget;
 import ai.core.ContinuingAI;
@@ -29,11 +30,6 @@ import ai.abstraction.partialobservability.POHeavyRush;
 import ai.abstraction.partialobservability.POLightRush;
 import ai.abstraction.partialobservability.PORangedRush;
 import ai.abstraction.partialobservability.POWorkerRush;
-import ai.abstraction.pathfinding.AStarPathFinding;
-import ai.abstraction.pathfinding.BFSPathFinding;
-import ai.abstraction.pathfinding.FloodFillPathFinding;
-import ai.abstraction.pathfinding.GreedyPathFinding;
-import ai.abstraction.pathfinding.PathFinding;
 import ai.ahtn.AHTNAI;
 import ai.core.ParameterSpecification;
 import ai.evaluation.EvaluationFunction;
@@ -177,7 +173,8 @@ public class FEStatePane extends JPanel {
     PathFinding pathFinders[] = {new AStarPathFinding(),
                                  new BFSPathFinding(),
                                  new GreedyPathFinding(),
-                                 new FloodFillPathFinding()};
+                                 new FloodFillPathFinding(),
+                                 new NewStarPathFinding()};
     
     public static UnitTypeTable unitTypeTables[] = {new UnitTypeTable(UnitTypeTable.VERSION_ORIGINAL, UnitTypeTable.MOVE_CONFLICT_RESOLUTION_CANCEL_BOTH),
                                       new UnitTypeTable(UnitTypeTable.VERSION_ORIGINAL, UnitTypeTable.MOVE_CONFLICT_RESOLUTION_CANCEL_ALTERNATING),
