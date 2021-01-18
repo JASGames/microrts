@@ -15,6 +15,7 @@ import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -74,6 +75,7 @@ public class GameDisruptor extends JPanel {
     private static int CurrentRWins = 0;
 
     public static Element MapXML;
+    public static String Map = "C:\\Users\\jakes\\Documents\\even_map.xml";
 
     @FunctionalInterface
     public interface SL extends DocumentListener {
@@ -145,8 +147,6 @@ public class GameDisruptor extends JPanel {
         rlight.canAttack = true;
         rlight.sightRadius = 2;
         utt.addUnitType(rlight);
-
-        String map = "C:\\Users\\jasnell\\OneDrive - Edith Cowan University\\Documents\\even_map.xml";
 
         CurrentBWins = 0;
         CurrentRWins = 0;
@@ -362,7 +362,7 @@ public class GameDisruptor extends JPanel {
     }
 
     public static void main(String[] args) throws Exception {
-        File file = new File("C:\\Users\\jasnell\\OneDrive - Edith Cowan University\\Documents\\even_map.xml");
+        File file = new File(Map);
         SAXBuilder saxBuilder = new SAXBuilder();
         Document document = saxBuilder.build(file);
         MapXML = document.getRootElement();
@@ -537,59 +537,62 @@ public class GameDisruptor extends JPanel {
 
         JButton evolveButton = new JButton("Evolve");
         evolveButton.addActionListener(e -> {
-            if(Running == false){
+            if (Running == false) {
                 Running = true;
                 new Thread(() -> {
-                    try {
-                        //RunSimulation(false);
-                        BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
-                        System.out.println("Evolve");
+                    for(int o = 0; o < 10; o++) {
+                        TargetWinRate = o * 10;
+                        try {
+                            //RunSimulation(false);
+                            BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
+                            System.out.println("Evolve|Simulation Count: " + SimulationCount + " Target Win-rate: " + TargetWinRate + " Target Weight:" + WinWeight + " Change Weight: " + ChangeWeight);
 
 
-                        while(true) {
-                            String s = bufferRead.readLine();
+                            while (true) {
+                                String s = bufferRead.readLine();
 
-                            if(s.contains("END")){
-                                System.out.println("FOUND END!");
-                                break;
-                            } else if(!s.isEmpty()) {
-                                String[] individuals = s.split(" : ");
-                                int[][] chromosome = new int[individuals.length][5];
-                                for (int i = 0; i < individuals.length; i++) {
-                                    String[] geneString = individuals[i].split(", ");
-                                    for (int k = 0; k < 5; k++) {
-                                        chromosome[i][k] = Integer.parseInt(geneString[k]);
+                                if (s.contains("END")) {
+                                    System.out.println("FOUND END!");
+                                    break;
+                                } else if (!s.isEmpty()) {
+                                    String[] individuals = s.split(" : ");
+                                    int[][] chromosome = new int[individuals.length][5];
+                                    for (int i = 0; i < individuals.length; i++) {
+                                        String[] geneString = individuals[i].split(", ");
+                                        for (int k = 0; k < 5; k++) {
+                                            chromosome[i][k] = Integer.parseInt(geneString[k]);
+                                        }
                                     }
+
+                                    String fitness = "";
+                                    for (int i = 0; i < individuals.length; i++) {
+                                        BlueHP = chromosome[i][0];
+                                        BlueDamage = chromosome[i][1];
+                                        BlueRange = chromosome[i][2];
+                                        BlueMoveTime = chromosome[i][3];
+                                        BlueAttackTime = chromosome[i][4];
+
+                                        RunSimulation(false, Runtime.getRuntime().availableProcessors());
+
+                                        float changed = (5.0f - (Math.abs(1.0f - ((float) chromosome[i][0] / HP)) + Math.abs(1.0f - ((float) chromosome[i][1] / DMG)) + Math.abs(1.0f - ((float) chromosome[i][2] / RNG)) + Math.abs(1.0f - ((float) chromosome[i][3] / MT)) + Math.abs(1.0f - ((float) chromosome[i][4] / AT)))) / 5.0f;
+                                        float tWinRate = (100 - Math.abs(WinRate - TargetWinRate)) / 100f;
+                                        fitness += ((tWinRate * WinWeight) + (changed * ChangeWeight)) + " ";
+                                    }
+
+                                    System.out.println(fitness.trim());
+                                    System.out.flush();
                                 }
-
-                                String fitness = "";
-                                for (int i = 0; i < individuals.length; i++) {
-                                    BlueHP = chromosome[i][0];
-                                    BlueDamage = chromosome[i][1];
-                                    BlueRange = chromosome[i][2];
-                                    BlueMoveTime = chromosome[i][3];
-                                    BlueAttackTime = chromosome[i][4];
-
-                                    RunSimulation(false, Runtime.getRuntime().availableProcessors());
-
-                                    float changed = (5.0f - (Math.abs(1.0f - ((float)chromosome[i][0]/HP)) + Math.abs(1.0f - ((float)chromosome[i][1]/DMG)) + Math.abs(1.0f - ((float)chromosome[i][2]/RNG)) + Math.abs(1.0f - ((float)chromosome[i][3]/MT)) + Math.abs(1.0f - ((float)chromosome[i][4]/AT)))) / 5.0f;
-                                    float tWinRate = (100-Math.abs(WinRate-TargetWinRate)) / 100f;
-                                    fitness += ((tWinRate*WinWeight) + (changed*ChangeWeight)) + " ";
-                                }
-
-                                System.out.println(fitness.trim());
-                                System.out.flush();
                             }
-                        }
 
-                    } catch (Exception e1){
-                        System.out.print(e1);
-                        System.out.print(" ");
-                        for(StackTraceElement el : e1.getStackTrace()){
-                            System.out.print(el.toString());
+                        } catch (Exception e1) {
+                            System.out.print(e1);
                             System.out.print(" ");
+                            for (StackTraceElement el : e1.getStackTrace()) {
+                                System.out.print(el.toString());
+                                System.out.print(" ");
+                            }
+                            System.out.println();
                         }
-                        System.out.println();
                     }
 
                     Running = false;
