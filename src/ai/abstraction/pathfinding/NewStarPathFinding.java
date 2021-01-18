@@ -151,36 +151,37 @@ public class NewStarPathFinding extends PathFinding {
                 if (free[x][y-1]==null) free[x][y-1]=(pgs.getTerrain(x, y-1)==PhysicalGameState.TERRAIN_NONE);//gs.free(x, y-1);
                 assert(free[x][y-1]!=null);
                 if (free[x][y-1]) {
-                    addToOpen(x,y-1,pos-w,pos,manhattanDistance(x, y-1, targetx, targety)+punish(x, y-1, gs, start));
+                    addToOpen(x,y-1,pos-w,pos,manhattanDistance(x, y-1, targetx, targety)+penalty(x, y-1, gs, start));
                 }
             }
             if (x<pgs.getWidth()-1 && inOpenOrClosed[pos+1] == 0) {
                 if (free[x+1][y]==null) free[x+1][y]=(pgs.getTerrain(x+1, y)==PhysicalGameState.TERRAIN_NONE);//gs.free(x+1, y);
                 assert(free[x+1][y]!=null);
                 if (free[x+1][y]) {
-                    addToOpen(x+1,y,pos+1,pos,manhattanDistance(x+1, y, targetx, targety)+punish(x+1, y, gs, start));
+                    addToOpen(x+1,y,pos+1,pos,manhattanDistance(x+1, y, targetx, targety)+penalty(x+1, y, gs, start));
                 }
             }
             if (y<pgs.getHeight()-1 && inOpenOrClosed[pos+w] == 0) {
                 if (free[x][y+1]==null) free[x][y+1]=(pgs.getTerrain(x, y+1)==PhysicalGameState.TERRAIN_NONE);//gs.free(x, y+1);
                 assert(free[x][y+1]!=null);
                 if (free[x][y+1]) {
-                    addToOpen(x,y+1,pos+w,pos,manhattanDistance(x, y+1, targetx, targety)+punish(x, y+1, gs, start));
+                    addToOpen(x,y+1,pos+w,pos,manhattanDistance(x, y+1, targetx, targety)+penalty(x, y+1, gs, start));
                 }
             }
             if (x>0 && inOpenOrClosed[pos-1] == 0) {
                 if (free[x-1][y]==null) free[x-1][y]=(pgs.getTerrain(x-1, y)==PhysicalGameState.TERRAIN_NONE);//gs.free(x-1, y);
                 assert(free[x-1][y]!=null);
                 if (free[x-1][y]) {
-                    addToOpen(x-1,y,pos-1,pos,manhattanDistance(x-1, y, targetx, targety)+punish(x-1, y, gs, start));
+                    addToOpen(x-1,y,pos-1,pos,manhattanDistance(x-1, y, targetx, targety)+penalty(x-1, y, gs, start));
                 }
             }              
         }
         return null;
     }
 
-    private int punish(int x, int y, GameState gs, Unit unit){
+    private int penalty(int x, int y, GameState gs, Unit unit){
         int p = 0;
+
         for(Unit u : gs.getUnits()) { //If this square has a wall on it's then its not empty
             if (u.getX() == x && u.getY() == y && u.getPlayer() == unit.getPlayer()) {
                 p += 5;
