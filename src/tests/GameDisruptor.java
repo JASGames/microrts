@@ -362,7 +362,7 @@ public class GameDisruptor extends JPanel {
     }
 
     public static void main(String[] args) throws Exception {
-        File file = new File(Map);
+        File file = new File("red_map.xml");
         SAXBuilder saxBuilder = new SAXBuilder();
         Document document = saxBuilder.build(file);
         MapXML = document.getRootElement();
