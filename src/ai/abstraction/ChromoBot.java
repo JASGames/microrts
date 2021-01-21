@@ -11,10 +11,7 @@ import ai.core.ParameterSpecification;
 
 import java.util.*;
 
-import rts.GameState;
-import rts.PhysicalGameState;
-import rts.Player;
-import rts.PlayerAction;
+import rts.*;
 import rts.units.*;
 
 /**
@@ -185,14 +182,15 @@ public class ChromoBot extends AbstractionLayerAI {
                 targettedBase = u2;
             }
         }
+
         if (unitGoals.containsKey(String.valueOf(u.getID())) && unitGoals.get(String.valueOf(u.getID())) == ChromoGoal.DefendBlue && targettedBase != null){
             // ie we're defence so don't go too far TODO unless no mobile left?
-            if ((Math.abs(closestEnemy.getX() - u.getX()) < 3) && (Math.abs(closestEnemy.getY() - u.getY()) < 3)) {
+            if (closestEnemy != null && closestDistance < 3) {
                 attack(u, closestEnemy);
             } else {
-                attack(u, targettedBase); // NOTE this stops it from going too far aflield
+                move(u, targettedBase.getX(), targettedBase.getY()); // NOTE this stops it from going too far aflield
             }
-        } else if ((Math.abs(closestEnemy.getX() - u.getX()) < 3) && (Math.abs(closestEnemy.getY() - u.getY()) < 3)) {
+        } else if (closestEnemy != null && closestDistance < 7) {
             // ie its too close, attack it
             attack(u, closestEnemy);
         } else if (targettedBase != null) {
@@ -204,32 +202,7 @@ public class ChromoBot extends AbstractionLayerAI {
             //attack(u, closestEnemy);
             if(unitGoals.containsKey(String.valueOf(u.getID()))){
                 ChromoGoal unitGoal =  unitGoals.get(String.valueOf(u.getID()));
-                Unit atGoal = pgs.getUnitAt(baseLocations.get(unitGoal)[0], baseLocations.get(unitGoal)[1]);
-                Collection<Unit> unitsAroundGoal = pgs.getUnitsAround(baseLocations.get(unitGoal)[0], baseLocations.get(unitGoal)[1], 3);
-
-                if(atGoal == null || atGoal.getPlayer() == 0) {
-                    move(u, baseLocations.get(unitGoal)[0], baseLocations.get(unitGoal)[1]);
-                } else{
-                    double closest = 1000000;
-                    Unit closeUnit = null;
-                    for(Unit u2 : unitsAroundGoal){
-                        int difx = Math.abs(u.getX()-u2.getX());
-                        int dify = Math.abs(u.getY()-u2.getY());
-
-                        double distance = Math.sqrt((difx*difx)+(dify+dify));
-
-                        if(distance < closest){
-                            closeUnit = u2;
-                            closest = distance;
-                        }
-                    }
-
-                    if(closeUnit != null && closeUnit.getPlayer() != 0){
-                        attack(u, closeUnit);
-                    }else{
-                        move(u, baseLocations.get(unitGoal)[0], baseLocations.get(unitGoal)[1]);
-                    }
-                }
+                move(u, baseLocations.get(unitGoal)[0], baseLocations.get(unitGoal)[1]);
             }else{
                 Unit unitAtDef = pgs.getUnitAt(baseLocations.get(ChromoGoal.DefendBlue)[0], baseLocations.get(ChromoGoal.DefendBlue)[1]);
                 if(unitAtDef != null) {

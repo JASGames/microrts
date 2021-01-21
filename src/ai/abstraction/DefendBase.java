@@ -8,10 +8,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import rts.GameState;
-import rts.PhysicalGameState;
-import rts.Player;
-import rts.PlayerAction;
+
+import rts.*;
 import rts.units.*;
 
 /**
@@ -156,14 +154,17 @@ public class DefendBase extends AbstractionLayerAI {
                 }
             }
         }
-        if (closestEnemy!=null && closestDistance < 8 && (closestBase == null || mybase < 8)) {
+
+        if (closestEnemy!=null && closestDistance < 7) {
             attack(u,closestEnemy);
-        } else if(closestEnemy != null && closestDistance < 4){
+        } else if(closestEnemy != null && closestDistance < 3){
             attack(u,closestEnemy);
         }
-        else
+        else if(closestBase != null)
         {
-            attack(u, closestBase);
+            move(u, closestBase.getX(), closestBase.getY());
+        }else {
+            attack(u, null);
         }
     }
 
