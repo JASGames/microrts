@@ -155,9 +155,10 @@ public class DefendBase extends AbstractionLayerAI {
             }
         }
 
-        if (closestEnemy!=null && closestDistance < 7) {
+        boolean isRanged = u.getAttackRange() > 1;
+        if (closestEnemy!=null && closestDistance < 7 && (isRanged  || getPathFinding().pathExists(u, closestEnemy.getPosition(pgs), gs, new ResourceUsage()))) {
             attack(u,closestEnemy);
-        } else if(closestEnemy != null && closestDistance < 3){
+        } else if(closestEnemy != null && closestDistance < 3 && (isRanged  || getPathFinding().pathExists(u, closestEnemy.getPosition(pgs), gs, new ResourceUsage()))){
             attack(u,closestEnemy);
         }
         else if(closestBase != null)

@@ -183,6 +183,7 @@ public class ChromoBot extends AbstractionLayerAI {
             }
         }
 
+        boolean isRanged = u.getAttackRange() > 1;
         if (unitGoals.containsKey(String.valueOf(u.getID())) && unitGoals.get(String.valueOf(u.getID())) == ChromoGoal.DefendBlue && targettedBase != null){
             // ie we're defence so don't go too far TODO unless no mobile left?
             if (closestEnemy != null && closestDistance < 3) {
@@ -190,7 +191,7 @@ public class ChromoBot extends AbstractionLayerAI {
             } else {
                 move(u, targettedBase.getX(), targettedBase.getY()); // NOTE this stops it from going too far aflield
             }
-        } else if (closestEnemy != null && closestDistance < 7) {
+        } else if (closestEnemy != null && closestDistance < 7 && (isRanged  || getPathFinding().pathExists(u, closestEnemy.getPosition(pgs), gs, new ResourceUsage()))) {
             // ie its too close, attack it
             attack(u, closestEnemy);
         } else if (targettedBase != null) {
