@@ -8,7 +8,9 @@ import ai.abstraction.ChromoBot;
 import rts.*;
 import rts.units.Unit;
 
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Vector;
 
 /**
  *
@@ -34,6 +36,8 @@ public class NewStarPathFinding extends PathFinding {
     int cost[];     // cost of reaching a given position so far
     int inOpenOrClosed[];
     int openinsert = 0;
+    HashMap<Integer, Unit> UnitAtLocation = new HashMap<>();
+    HashMap<Integer, Integer> UnitFreeMoves = new HashMap<>();
 
     // This fucntion finds the shortest path from 'start' to 'targetpos' and then returns
     // a UnitAction of the type 'actionType' with the direction of the first step in the shorteet path
@@ -47,6 +51,32 @@ public class NewStarPathFinding extends PathFinding {
      */
     public UnitAction findPathToPositionInRange(Unit start, int targetpos, int range, GameState gs, ResourceUsage ru) {
         PhysicalGameState pgs = gs.getPhysicalGameState();
+
+        UnitAtLocation.clear();
+        UnitFreeMoves.clear();
+        for(Unit u : gs.getUnits()) { // Loop over the units
+            UnitAtLocation.put(u.getPosition(pgs), u);
+        }
+
+        for(Unit u : gs.getUnits()){
+            int freeMoves = 0;
+            int x = u.getX();
+            int y = u.getY();
+
+            if(u.getType().canMove) {
+                if (x > 0 && UnitAtLocation.get((x - 1) + pgs.getWidth() * (y)) == null && pgs.getTerrain(x - 1, y) == PhysicalGameState.TERRAIN_NONE)
+                    freeMoves++;
+                if (x < pgs.getWidth() - 1 && UnitAtLocation.get((x + 1) + pgs.getWidth() * (y)) == null && pgs.getTerrain(x + 1, y) == PhysicalGameState.TERRAIN_NONE)
+                    freeMoves++;
+                if (y > 0 && UnitAtLocation.get((x) + pgs.getWidth() * (y - 1)) == null && pgs.getTerrain(x, y - 1) == PhysicalGameState.TERRAIN_NONE)
+                    freeMoves++;
+                if (y < pgs.getHeight() - 1 && UnitAtLocation.get((x) + pgs.getWidth() * (y + 1)) == null && pgs.getTerrain(x, y + 1) == PhysicalGameState.TERRAIN_NONE)
+                    freeMoves++;
+            }
+
+            UnitFreeMoves.put(u.getPosition(pgs), freeMoves);
+        }
+
         int w = pgs.getWidth();
         int h = pgs.getHeight();
         if (free==null || free.length<w*h) {
@@ -151,46 +181,64 @@ public class NewStarPathFinding extends PathFinding {
                 if (free[x][y-1]==null) free[x][y-1]=(pgs.getTerrain(x, y-1)==PhysicalGameState.TERRAIN_NONE);//gs.free(x, y-1);
                 assert(free[x][y-1]!=null);
                 if (free[x][y-1]) {
-                    addToOpen(x,y-1,pos-w,pos,manhattanDistance(x, y-1, targetx, targety)+penalty(x, y-1, gs));
+                    addToOpen(x,y-1,pos-w,pos,manhattanDistance(x, y-1, targetx, targety)+penalty(x, y-1, pgs));
                 }
             }
             if (x<pgs.getWidth()-1 && inOpenOrClosed[pos+1] == 0) {
                 if (free[x+1][y]==null) free[x+1][y]=(pgs.getTerrain(x+1, y)==PhysicalGameState.TERRAIN_NONE);//gs.free(x+1, y);
                 assert(free[x+1][y]!=null);
                 if (free[x+1][y]) {
-                    addToOpen(x+1,y,pos+1,pos,manhattanDistance(x+1, y, targetx, targety)+penalty(x+1, y, gs));
+                    addToOpen(x+1,y,pos+1,pos,manhattanDistance(x+1, y, targetx, targety)+penalty(x+1, y, pgs));
                 }
             }
             if (y<pgs.getHeight()-1 && inOpenOrClosed[pos+w] == 0) {
                 if (free[x][y+1]==null) free[x][y+1]=(pgs.getTerrain(x, y+1)==PhysicalGameState.TERRAIN_NONE);//gs.free(x, y+1);
                 assert(free[x][y+1]!=null);
                 if (free[x][y+1]) {
-                    addToOpen(x,y+1,pos+w,pos,manhattanDistance(x, y+1, targetx, targety)+penalty(x, y+1, gs));
+                    addToOpen(x,y+1,pos+w,pos,manhattanDistance(x, y+1, targetx, targety)+penalty(x, y+1, pgs));
                 }
             }
             if (x>0 && inOpenOrClosed[pos-1] == 0) {
                 if (free[x-1][y]==null) free[x-1][y]=(pgs.getTerrain(x-1, y)==PhysicalGameState.TERRAIN_NONE);//gs.free(x-1, y);
                 assert(free[x-1][y]!=null);
                 if (free[x-1][y]) {
-                    addToOpen(x-1,y,pos-1,pos,manhattanDistance(x-1, y, targetx, targety)+penalty(x-1, y, gs));
+                    addToOpen(x-1,y,pos-1,pos,manhattanDistance(x-1, y, targetx, targety)+penalty(x-1, y, pgs));
                 }
             }              
         }
         return null;
     }
 
-    private int penalty(int x, int y, GameState gs){
+    private int penalty(int x, int y, PhysicalGameState pgs){
         int p = 0;
+        int pos = (pgs.getWidth() * y) + x;
+        Unit u = UnitAtLocation.get(pos);
 
-        for(Unit u : gs.getUnits()) { // Loop over the units
-            if (u.getX() == x && u.getY() == y) { // If the unit is in the target square
+        if(u != null)
+        {
+            // Add a penalty
+            p = 1;
+
+            // Count the free moves the target unit has
+            int freeMoves = UnitFreeMoves.get(pos);
+
+            // Increase the penalty by the number of available moves less than 4
+            p += 4 - freeMoves;
+        }
+
+        return p;
+        /*int p = 0;
+
+
+        for(Unit u : pgs.getUnits()){
+            if (u.getX() == x && u.getY() == y) { // If the unit in the square
                 // Add a penalty
                 p = 1;
 
                 // Count the free moves the target unit has
                 int freeMoves = 0;
                 for (UnitAction ua : u.getUnitActions(gs)) {
-                    if(ua.getDirection() == UnitAction.TYPE_MOVE) freeMoves++;
+                    if (ua.getDirection() == UnitAction.TYPE_MOVE) freeMoves++;
                 }
 
                 // Increase the penalty by the number of available moves less than 4
@@ -198,7 +246,7 @@ public class NewStarPathFinding extends PathFinding {
             }
         }
 
-        return p;
+        return p;*/
     }
 
     /*int p = 0;

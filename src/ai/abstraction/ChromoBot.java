@@ -162,16 +162,13 @@ public class ChromoBot extends AbstractionLayerAI {
         //Boolean mobile = false; // Any mobile enemy left?
         for (Unit u2 : pgs.getUnits()) {
             if (u2.getPlayer() ==  1) {
-                /*if (u2.getType().canMove) // TODO sure?
-                {
-                    mobile = true;
-                }*/
                 int d = Math.abs(u2.getX() - u.getX()) + Math.abs(u2.getY() - u.getY());
                 if (closestEnemy == null || d < closestDistance) {
                     closestEnemy = u2;
                     closestDistance = d;
                 }
             } // TODO how to go for another base? it seems to when no enemy units from start
+
             if (u2.getID() == 10 && unitGoals.containsKey(String.valueOf(u.getID())) && unitGoals.get(String.valueOf(u.getID())) == ChromoGoal.AttackRed1) {
                 targettedBase = u2;
             } else if (u2.getID() == 30 && unitGoals.containsKey(String.valueOf(u.getID())) && unitGoals.get(String.valueOf(u.getID())) == ChromoGoal.AttackRed2) {

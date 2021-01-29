@@ -23,12 +23,9 @@ import java.io.*;
 import javax.swing.JFrame;
 
 import javafx.scene.effect.Light;
+import jdk.nashorn.internal.ir.debug.JSONWriter;
 import org.w3c.dom.ranges.Range;
-import rts.GameState;
-import rts.PhysicalGameState;
-import rts.PlayerAction;
-import rts.Trace;
-import rts.TraceEntry;
+import rts.*;
 import rts.units.Unit;
 import rts.units.UnitTypeTable;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -300,18 +297,17 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                 int ranged = rangedUnits;
 
                 float[][] priorities = new float[phases][48];
-                //System.out.println("Light: "+light+" Heavy: "+heavy+" Ranged: "+ranged+" Phases: "+phases);
-                
+                System.out.println("Light: "+light+" Heavy: "+heavy+" Ranged: "+ranged+" Phases: "+phases);
 
                 for (int p = 0; p < phases; p++) {
                     if(p == 0) {
                         for (int i = 0; i < 12; i++) {
-                            priorities[p][i] = Float.parseFloat(chromstrs[i + (p * 12)]);
+                            priorities[p][i] = Float.parseFloat(chromstrs[i]);
                             //System.out.print(priorities[p][i] + " ");
                         }
                     } else {
                         for (int i = 0; i < 48; i++) {
-                            priorities[p][i] = Float.parseFloat(chromstrs[i + (p * 12)]);
+                            priorities[p][i] = Float.parseFloat(chromstrs[i + 12 + ((p-1) * 48)]);
                             //System.out.print(priorities[p][i] + " ");
                         }
                     }
@@ -351,8 +347,9 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                 }
 
                 // Set the AIs
-                AI ai1 = new ChromoBot(utt,  new NewStarPathFinding(), UnitTotals, baseLocations);
-                AI ai2 = new DefendBase(utt, new NewStarPathFinding());
+                NewStarPathFinding new1 = new NewStarPathFinding();
+                AI ai1 = new ChromoBot(utt,  new1, UnitTotals, baseLocations);
+                AI ai2 = new DefendBase(utt, new1);
 
                 // Create a trace for saving the game
                 Trace trace = new Trace(utt);
@@ -636,10 +633,10 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
 
                                 for(Unit u : gs.getUnits()) {
                                     if(u.getPlayer() == 0 && (u.getType().name == "Light" || u.getType().name == "Heavy" || u.getType().name == "Ranged" )){
-                                        //System.out.println(u.getType().name+" Unit: " + (UnitTotals.get(String.valueOf(u.getID()))) + " " + u.getID());
+                                        System.out.println(u.getType().name+" Unit: " + (UnitTotals.get(String.valueOf(u.getID()))) + " " + u.getID());
                                         prevTotal++;
                                     }
-                                }
+                                }*/
                                 //System.out.println("Unit Game State Total: "+prevTotal);*/
 
                                 // Progress to next phase
@@ -922,25 +919,25 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                                 }
                             }
 
-                            /*System.out.println("Prev Goals of current untis!");
-                            int prevTotal = 0;
+                            //System.out.println("Prev Goals of current untis!");
+                            /*/int prevTotal = 0;
                             for(ChromoBot.ChromoGoal g : lightGoals.keySet()){
                                 for(String id : lightGoals.get(g)) {
-                                    System.out.println("Light Unit: " + (g) + " " + id);
+                                    //System.out.println("Light Unit: " + (g) + " " + id);
                                     prevTotal++;
                                 }
                             }
 
                             for(ChromoBot.ChromoGoal g : heavyGoals.keySet()){
                                 for(String id : heavyGoals.get(g)) {
-                                    System.out.println("Heavy Unit: " + (g) + " " + id);
+                                    //System.out.println("Heavy Unit: " + (g) + " " + id);
                                     prevTotal++;
                                 }
                             }
 
                             for(ChromoBot.ChromoGoal g : rangedGoals.keySet()){
                                 for(String id : rangedGoals.get(g)) {
-                                    System.out.println("Ranged Unit: " + (g) + " " + id);
+                                    //System.out.println("Ranged Unit: " + (g) + " " + id);
                                     prevTotal++;
                                 }
                             }
@@ -953,8 +950,8 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                                     System.out.println(u.getType().name+" Unit: " + (UnitTotals.get(String.valueOf(u.getID()))) + " " + u.getID());
                                     prevTotal++;
                                 }
-                            }
-                            System.out.println("Unit Game State Total: "+prevTotal);*/
+                            }*/
+                            //System.out.println("Unit Game State Total: "+prevTotal);
 
                             // Progress to next phase
                             currentPhase++;
@@ -962,6 +959,7 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
 
                         PlayerAction pa1 = ai1.getAction(0, gs);
                         PlayerAction pa2 = ai2.getAction(1, gs);
+
                         gs.issueSafe(pa1);
                         gs.issueSafe(pa2);
 
@@ -1039,20 +1037,51 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
             int[][] chromosome = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
             String[] chromstrs;
             chromstrs = traceChromo.split(" ");
-            for (int ii = 0; ii < 4; ii++) {
-                for (int jj = 0; jj < 3; jj++) {
-                    chromosome[ii][jj] = Integer.parseInt(chromstrs[ii * 3 + jj]);
+
+            int currentPhase = 1;
+            int phases = 1 +((chromstrs.length - 12) / 12 / 4);
+            int light = lightUnits;
+            int heavy = heavyUnits;
+            int ranged = rangedUnits;
+
+            float[][] priorities = new float[phases][48];
+
+            for (int p = 0; p < phases; p++) {
+                if(p == 0) {
+                    for (int i = 0; i < 12; i++) {
+                        priorities[p][i] = Float.parseFloat(chromstrs[i]);
+                        //System.out.print(priorities[p][i] + " ");
+                    }
+                } else {
+                    for (int i = 0; i < 48; i++) {
+                        priorities[p][i] = Float.parseFloat(chromstrs[i + 12 + ((p-1) * 48)]);
+                        //System.out.print(priorities[p][i] + " ");
+                    }
                 }
+                //System.out.println();
             }
 
             // Setup game conditions
             PhysicalGameState pgs = PhysicalGameState.load(map, utt); // TwoBasesBarracks16x16.xml", utt);
             GameState gs = new GameState(pgs, utt);
+
+            ArrayList<Unit> startingUnits = new ArrayList<>();
+            HashMap<Unit, StringBuilder> unitStates = new HashMap<>();
+
+            for(Unit u: pgs.getUnits()){
+                if(u.getType().name == "Light"){
+                    u.setHitPoints(8);
+                } else if(u.getType().name == "Heavy"){
+                    u.setHitPoints(8);
+                } else if(u.getType().name == "Ranged"){
+                    u.setHitPoints(2);
+                }
+            }
             //int MAXCYCLES = 1000; // Maximum game length
             int PERIOD = 15; // Refresh rate for display (milliseconds)
             boolean gameover = false;
 
-            QuickDeploy(pgs, utt, chromosome);
+            QuickDeploy(pgs, utt, priorities, light, heavy, ranged);
             HashMap<ChromoBot.ChromoGoal, int[]> baseLocations = new HashMap();
             for(Unit u : pgs.getUnits()){
                 if(u.getType().name  == "Base"){
@@ -1063,6 +1092,16 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                         case "20": baseLocations.put(ChromoBot.ChromoGoal.DefendBlue, new int[]{ u.getX(), u.getY() }); break;
                     }
                 }
+
+
+                startingUnits.add(u);
+                StringBuilder usb = new StringBuilder();
+                usb.append("{"
+                        + "\"x\":" + u.getX() + ", "
+                        + "\"y\":" + u.getY() + ", "
+                        + "\"hitpoints\":" + u.getHitPoints()
+                        + "},");
+                unitStates.put(u, usb);
             }
 
             // Set the AIs
@@ -1070,20 +1109,306 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
             AI ai2 = new DefendBase(utt, new NewStarPathFinding());
 
             // Create a trace for saving the game
-            Trace trace = new Trace(utt);
-            TraceEntry te = new TraceEntry(gs.getPhysicalGameState().clone(),gs.getTime());
-            trace.addEntry(te);
 
              // Faster, headless version
             do { // TODO move 'trace' here & have a poper save option?
+                if(gs.getTime() > currentPhase*MAXCYCLES/phases && phases > 1){
+                    HashMap<ChromoBot.ChromoGoal, List<String>> lightGoals = new HashMap();
+                    HashMap<ChromoBot.ChromoGoal, List<String>> heavyGoals = new HashMap();
+                    HashMap<ChromoBot.ChromoGoal, List<String>> rangedGoals = new HashMap();
+
+                    int[][] unitTotals = new int[4][3];
+
+                    for(Unit u : gs.getUnits()){
+                        ChromoBot.ChromoGoal unitGoal = UnitTotals.get(String.valueOf(u.getID()));
+
+                        if(unitGoal != null){
+                            switch (u.getType().name){
+                                case "Light":
+                                    unitTotals[unitGoal.ordinal()][0] += 1;
+                                    if(lightGoals.containsKey(unitGoal)){
+                                        lightGoals.get(unitGoal).add(String.valueOf(u.getID()));
+                                    } else {
+                                        List l = new ArrayList();
+                                        l.add(String.valueOf(u.getID()));
+                                        lightGoals.put(unitGoal, l);
+                                    }
+                                    break;
+                                case "Heavy":
+                                    unitTotals[unitGoal.ordinal()][1] += 1;
+                                    if(heavyGoals.containsKey(unitGoal)){
+                                        heavyGoals.get(unitGoal).add(String.valueOf(u.getID()));
+                                    } else {
+                                        List l = new ArrayList();
+                                        l.add(String.valueOf(u.getID()));
+                                        heavyGoals.put(unitGoal, l);
+                                    }
+                                    break;
+                                case "Ranged":
+                                    unitTotals[unitGoal.ordinal()][2] += 1;
+                                    if(rangedGoals.containsKey(unitGoal)){
+                                        rangedGoals.get(unitGoal).add(String.valueOf(u.getID()));
+                                    } else {
+                                        List l = new ArrayList();
+                                        l.add(String.valueOf(u.getID()));
+                                        rangedGoals.put(unitGoal, l);
+                                    }
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    }
+
+                    //System.out.println("End Phase: "+currentPhase);
+                                /*for(int b = 0; b < 4; b++){
+                                    for(int t = 0; t < 3; t++){
+                                        System.out.print(unitTotals[b][t] + " ");
+                                    }
+
+                                    System.out.println();
+                                }*/
+
+                    UnitTotals.clear();
+
+                    //Calculate the unit priorities
+                    int p = currentPhase;
+
+
+                    for(int b = 0; b < 4; b++) {
+                        //System.out.println("Phase: " + p + " Priority Len: " + priorities[p].length + " Phase Len:" + priorities.length);
+                        light = unitTotals[b][0];
+                        heavy = unitTotals[b][1];
+                        ranged = unitTotals[b][2];
+                        ChromoBot.ChromoGoal prevGoal = ChromoBot.ChromoGoal.values()[b];
+
+                        // Loop over each base and work out what units need to be assigned a particular goal using the priority
+                        int[][] units = new int[4][3];
+
+                        // Defend Blue -> Attack Red 1 -> Attack Red 2 -> Attack Red 3
+                        float lightSum = priorities[p][0+(b*12)] + priorities[p][3+(b*12)] + priorities[p][6+(b*12)] + priorities[p][9+(b*12)];
+                        float heavySum = priorities[p][1+(b*12)] + priorities[p][4+(b*12)] + priorities[p][7+(b*12)] + priorities[p][10+(b*12)];
+                        float rangedSum = priorities[p][2+(b*12)] + priorities[p][5+(b*12)] + priorities[p][8+(b*12)] + priorities[p][11+(b*12)];
+
+                        int lblueDef = (int)Math.floor(light * priorities[p][0+(b*12)] / lightSum);
+                        int lredAtk1 = (int)Math.floor(light * priorities[p][3+(b*12)] / lightSum);
+                        int lredAtk2 = (int)Math.floor(light * priorities[p][6+(b*12)] / lightSum);
+                        int lredAtk3 = (int)Math.floor(light * priorities[p][9+(b*12)] / lightSum);
+
+                        int lightLeft = light - (lblueDef + lredAtk1 + lredAtk2 + lredAtk3);
+                        //System.out.println("Light Left: "+lightLeft);
+                        //System.out.println("Light Placed: "+(lblueDef + lredAtk1 + lredAtk2 + lredAtk3));
+                        List<Float> lightRemainders = new ArrayList();
+                        lightRemainders.add(((light * priorities[p][0+(b*12)] / lightSum) - lblueDef)+lightLeft);
+                        lightRemainders.add(((light * priorities[p][3+(b*12)] / lightSum) - lredAtk1)+lightLeft);
+                        lightRemainders.add(((light * priorities[p][6+(b*12)] / lightSum) - lredAtk2)+lightLeft);
+                        lightRemainders.add(((light * priorities[p][9+(b*12)] / lightSum) - lredAtk3)+lightLeft);
+
+
+                        for(int i = 0; i < lightLeft; i++){
+                            float highest = 0;
+                            int index = 0;
+                            for(int r = 0; r < lightRemainders.size(); r++){
+                                if(lightRemainders.get(r) > highest){
+                                    index = r;
+                                    highest = lightRemainders.get(r);
+                                }
+                            }
+
+                            lightRemainders.set(index,highest-1.0f);
+
+                            switch(index){
+                                case 0: lblueDef += 1; break;
+                                case 1: lredAtk1 += 1; break;
+                                case 2: lredAtk2 += 1; break;
+                                case 3: lredAtk3 += 1; break;
+                            }
+                        }
+
+                        units[0][0] = lblueDef;
+                        units[1][0] = lredAtk1;
+                        units[2][0] = lredAtk2;
+                        units[3][0] = lredAtk3;
+
+                        int hblueDef = (int)Math.floor(heavy * priorities[p][1+(b*12)] / heavySum);
+                        int hredAtk1 = (int)Math.floor(heavy * priorities[p][4+(b*12)] / heavySum);
+                        int hredAtk2 = (int)Math.floor(heavy * priorities[p][7+(b*12)] / heavySum);
+                        int hredAtk3 = (int)Math.floor(heavy * priorities[p][10+(b*12)] / heavySum);
+
+                        int heavyLeft = heavy - (hblueDef + hredAtk1 + hredAtk2 + hredAtk3);
+                        List<Float> heavyRemainders = new ArrayList();
+                        heavyRemainders.add(((heavy * priorities[p][1+(b*12)] / heavySum) - hblueDef)+heavyLeft);
+                        heavyRemainders.add(((heavy * priorities[p][4+(b*12)] / heavySum) - hredAtk1)+heavyLeft);
+                        heavyRemainders.add(((heavy * priorities[p][7+(b*12)] / heavySum) - hredAtk2)+heavyLeft);
+                        heavyRemainders.add(((heavy * priorities[p][10+(b*12)] / heavySum) - hredAtk3)+heavyLeft);
+
+
+                        for(int i = 0; i < heavyLeft; i++){
+                            float highest = 0;
+                            int index = 0;
+                            for(int r = 0; r < heavyRemainders.size(); r++){
+                                if(heavyRemainders.get(r) > highest){
+                                    index = r;
+                                    highest = heavyRemainders.get(r);
+                                }
+                            }
+
+                            heavyRemainders.set(index,highest-1.0f);
+
+                            switch(index){
+                                case 0: hblueDef += 1; break;
+                                case 1: hredAtk1 += 1; break;
+                                case 2: hredAtk2 += 1; break;
+                                case 3: hredAtk3 += 1; break;
+                            }
+                        }
+
+                        units[0][1] = hblueDef;
+                        units[1][1] = hredAtk1;
+                        units[2][1] = hredAtk2;
+                        units[3][1] = hredAtk3;
+
+                        int rblueDef = (int)Math.floor(ranged * priorities[p][2+(b*12)] / rangedSum);
+                        int rredAtk1 = (int)Math.floor(ranged * priorities[p][5+(b*12)] / rangedSum);
+                        int rredAtk2 = (int)Math.floor(ranged * priorities[p][8+(b*12)] / rangedSum);
+                        int rredAtk3 = (int)Math.floor(ranged * priorities[p][11+(b*12)] / rangedSum);
+
+                        int rangedLeft = ranged - (rblueDef + rredAtk1 + rredAtk2 + rredAtk3);
+                        List<Float> rangedRemainders = new ArrayList();
+                        rangedRemainders.add(((ranged * priorities[p][2+(b*12)] / rangedSum) - rblueDef)+rangedLeft);
+                        rangedRemainders.add(((ranged * priorities[p][5+(b*12)] / rangedSum) - rredAtk1)+rangedLeft);
+                        rangedRemainders.add(((ranged * priorities[p][8+(b*12)] / rangedSum) - rredAtk2)+rangedLeft);
+                        rangedRemainders.add(((ranged * priorities[p][11+(b*12)] / rangedSum) - rredAtk3)+rangedLeft);
+
+
+                        for(int i = 0; i < rangedLeft; i++){
+                            float highest = 0;
+                            int index = 0;
+                            for(int r = 0; r < rangedRemainders.size(); r++){
+                                if(rangedRemainders.get(r) > highest){
+                                    index = r;
+                                    highest = rangedRemainders.get(r);
+                                }
+                            }
+
+                            rangedRemainders.set(index,highest-1.0f);
+
+                            switch(index){
+                                case 0: rblueDef += 1; break;
+                                case 1: rredAtk1 += 1; break;
+                                case 2: rredAtk2 += 1; break;
+                                case 3: rredAtk3 += 1; break;
+                            }
+                        }
+
+                        units[0][2] = rblueDef;
+                        units[1][2] = rredAtk1;
+                        units[2][2] = rredAtk2;
+                        units[3][2] = rredAtk3;
+
+                        System.out.println("Light: " + light + " Sum: " + lightSum + " Allocation: " + lblueDef + " " + lredAtk1 + " " + lredAtk2 + " " + lredAtk3);
+                        System.out.println("Heavy: " + heavy + " Sum: " + heavySum + " Allocation: " + hblueDef + " " + hredAtk1 + " " + hredAtk2 + " " + hredAtk3);
+                        System.out.println("Ranged: " + ranged + " Sum: " + rangedSum + " Allocation: " + rblueDef + " " + rredAtk1 + " " + rredAtk2 + " " + rredAtk3);
+
+                        //Update Light Units
+                        if(lightGoals.containsKey(prevGoal)) {
+                            for (int i = 0; i < lightGoals.get(prevGoal).size(); i++) {
+                                for (int k = 0; k < 4; k++) {
+                                    if (units[k][0] > 0) {
+                                        units[k][0] -= 1;
+                                        UnitTotals.put(lightGoals.get(prevGoal).get(i), ChromoBot.ChromoGoal.values()[k]);
+                                        //System.out.println("Light Unit: "+(lightGoals.get(prevGoal).get(i))+" "+ChromoBot.ChromoGoal.values()[k].toString());
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        //Update Heavy Units
+                        if(heavyGoals.containsKey(prevGoal)){
+                            for(int i = 0; i < heavyGoals.get(prevGoal).size(); i++){
+                                for(int k = 0; k < 4; k++){
+                                    if(units[k][1] > 0){
+                                        units[k][1] -= 1;
+                                        UnitTotals.put(heavyGoals.get(prevGoal).get(i), ChromoBot.ChromoGoal.values()[k]);
+                                        //System.out.println("Heavy Unit: "+(heavyGoals.get(prevGoal).get(i))+" "+ChromoBot.ChromoGoal.values()[k].toString());
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        //Update Ranged Units
+                        if(rangedGoals.containsKey(prevGoal)) {
+                            for (int i = 0; i < rangedGoals.get(prevGoal).size(); i++) {
+                                for (int k = 0; k < 4; k++) {
+                                    if (units[k][2] > 0) {
+                                        units[k][2] -= 1;
+                                        UnitTotals.put(rangedGoals.get(prevGoal).get(i), ChromoBot.ChromoGoal.values()[k]);
+                                        //System.out.println("Ranged Unit: "+(rangedGoals.get(prevGoal).get(i))+" "+ChromoBot.ChromoGoal.values()[k].toString());
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    //System.out.println("Prev Goals of current untis!");
+                                /*int prevTotal = 0;
+                                for(ChromoBot.ChromoGoal g : lightGoals.keySet()){
+                                    for(String id : lightGoals.get(g)) {
+                                        //System.out.println("Light Unit: " + (g) + " " + id);
+                                        prevTotal++;
+                                    }
+                                }
+
+                                for(ChromoBot.ChromoGoal g : heavyGoals.keySet()){
+                                    for(String id : heavyGoals.get(g)) {
+                                        //System.out.println("Heavy Unit: " + (g) + " " + id);
+                                        prevTotal++;
+                                    }
+                                }
+
+                                for(ChromoBot.ChromoGoal g : rangedGoals.keySet()){
+                                    for(String id : rangedGoals.get(g)) {
+                                        //System.out.println("Ranged Unit: " + (g) + " " + id);
+                                        prevTotal++;
+                                    }
+                                }
+
+                                //System.out.println("Goal Map Total: "+prevTotal);
+                                prevTotal = 0;
+
+                                for(Unit u : gs.getUnits()) {
+                                    if(u.getPlayer() == 0 && (u.getType().name == "Light" || u.getType().name == "Heavy" || u.getType().name == "Ranged" )){
+                                        System.out.println(u.getType().name+" Unit: " + (UnitTotals.get(String.valueOf(u.getID()))) + " " + u.getID());
+                                        prevTotal++;
+                                    }
+                                }*/
+                    //System.out.println("Unit Game State Total: "+prevTotal);*/
+
+                    // Progress to next phase
+                    currentPhase++;
+                    //Thread.sleep(1000);
+                }
+
                 PlayerAction pa1 = ai1.getAction(0, gs);
                 PlayerAction pa2 = ai2.getAction(1, gs);
 
                 // Create a new trace entry
-                te = new TraceEntry(gs.getPhysicalGameState().clone(),gs.getTime());
+                /*te = new TraceEntry(gs.getPhysicalGameState().clone(),gs.getTime());
                 te.addPlayerAction(pa1.clone());
                 te.addPlayerAction(pa2.clone());
-                trace.addEntry(te);
+                trace.addEntry(te);*/
+
+                for(Unit u : startingUnits){
+                    StringBuilder states = unitStates.get(u);
+                    states.append("{"
+                            + "\"x\":" + u.getX() + ", "
+                            + "\"y\":" + u.getY() + ", "
+                            + "\"hitpoints\":" + u.getHitPoints()
+                            + "},");
+                }
 
                 gs.issueSafe(pa1);
                 gs.issueSafe(pa2);
@@ -1095,21 +1420,40 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
             ai1.gameOver(gs.winner()); // TODO what do these do?
             ai2.gameOver(gs.winner());
 
+            FileWriter json = new FileWriter("trace.json");
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("{ \"Units\": [");
+            for(Unit u : unitStates.keySet()){
+                sb.append("{ "
+                        + "\"type\":\"" + u.getType().name + "\""
+                        + ",\"id\":" + u.getID()
+                        + ",\"player\":" + u.getPlayer()
+                        + ",\"states\":[");
+
+                sb.append(unitStates.get(u).toString());
+
+                sb.append("]},");
+            }
+
+            sb.append("]}");
+            json.write(sb.toString());
+            json.flush();
+            json.close();
             // Finish up game trace & save it if 'display' is set
-            te = new TraceEntry(gs.getPhysicalGameState().clone(), gs.getTime());
-            trace.addEntry(te);
 
             //Creating a File object for directory
-            File directoryPath = new File("traces");
+            //File directoryPath = new File("traces");
             //List of all files and directories
-            String contents[] = directoryPath.list();
-            int num = contents.length;
+            //String contents[] = directoryPath.list();
+            //int num = contents.length;
 
             // Write the file to the newest name
-            XMLWriter xml = new XMLWriter(new FileWriter("traces/game_" + String.valueOf(num) + ".xml"));
-            trace.toxml(xml);
-            xml.flush();
-            xml.close();
+            //XMLWriter xml = new XMLWriter(new FileWriter("traces/game_" + String.valueOf(num) + ".xml"));
+
+            //trace.toxml(xml);
+            //xml.flush();
+            //xml.close();
         }
     }
 }
