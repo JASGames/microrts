@@ -22,13 +22,13 @@ import java.util.*;
 import java.io.*;
 import javax.swing.JFrame;
 
-import javafx.scene.effect.Light;
-import jdk.nashorn.internal.ir.debug.JSONWriter;
+//import javafx.scene.effect.Light;
+//import jdk.nashorn.internal.ir.debug.JSONWriter;
 import org.w3c.dom.ranges.Range;
 import rts.*;
 import rts.units.Unit;
 import rts.units.UnitTypeTable;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+//import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import util.XMLWriter;
 
 /**
@@ -1100,7 +1100,7 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                         + "\"x\":" + u.getX() + ", "
                         + "\"y\":" + u.getY() + ", "
                         + "\"hitpoints\":" + u.getHitPoints()
-                        + "},");
+                        + "}");
                 unitStates.put(u, usb);
             }
 
@@ -1401,13 +1401,16 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                 te.addPlayerAction(pa2.clone());
                 trace.addEntry(te);*/
 
+                boolean isFirst = true;
                 for(Unit u : startingUnits){
                     StringBuilder states = unitStates.get(u);
+                    states.append(",");
+
                     states.append("{"
                             + "\"x\":" + u.getX() + ", "
                             + "\"y\":" + u.getY() + ", "
                             + "\"hitpoints\":" + u.getHitPoints()
-                            + "},");
+                            + "}");
                 }
 
                 gs.issueSafe(pa1);
@@ -1420,11 +1423,20 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
             ai1.gameOver(gs.winner()); // TODO what do these do?
             ai2.gameOver(gs.winner());
 
+            long start = System.currentTimeMillis();
+
             FileWriter json = new FileWriter("trace.json");
 
             StringBuilder sb = new StringBuilder();
             sb.append("{ \"Units\": [");
+            boolean first = true;
             for(Unit u : unitStates.keySet()){
+                if(first) {
+                    first = false;
+                } else {
+                    sb.append(",");
+                }
+
                 sb.append("{ "
                         + "\"type\":\"" + u.getType().name + "\""
                         + ",\"id\":" + u.getID()
@@ -1433,13 +1445,21 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
 
                 sb.append(unitStates.get(u).toString());
 
-                sb.append("]},");
+                sb.append("]}");
             }
 
             sb.append("]}");
+
+            long elapsedTime = System.currentTimeMillis() - start;
+            System.out.println("Append JSON took: "+elapsedTime);
+            start = System.currentTimeMillis();
+
             json.write(sb.toString());
             json.flush();
             json.close();
+
+            elapsedTime = System.currentTimeMillis() - start;
+            System.out.println("Writing JSON took: "+elapsedTime);
             // Finish up game trace & save it if 'display' is set
 
             //Creating a File object for directory
