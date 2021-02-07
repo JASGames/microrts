@@ -352,12 +352,14 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                 AI ai2 = new DefendBase(utt, new1);
 
                 // Create a trace for saving the game
-                Trace trace = new Trace(utt);
-                TraceEntry te = new TraceEntry(gs.getPhysicalGameState().clone(),gs.getTime());
-                trace.addEntry(te);
+                //Trace trace = new Trace(utt);
+                //TraceEntry te = new TraceEntry(gs.getPhysicalGameState().clone(),gs.getTime());
+                //trace.addEntry(te);
 
 
                 if (display) { // Slower version, displays the battle
+                    new traceDialogWindow();
+
                     JFrame w = PhysicalGameStatePanel.newVisualizer(gs, 640, 640, false, PhysicalGameStatePanel.COLORSCHEME_BLACK);
                     Thread.sleep(3000);
 
@@ -648,10 +650,10 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                             PlayerAction pa2 = ai2.getAction(1, gs);
 
                             // Create a new trace entry
-                            te = new TraceEntry(gs.getPhysicalGameState().clone(),gs.getTime());
+                            /*te = new TraceEntry(gs.getPhysicalGameState().clone(),gs.getTime());
                             te.addPlayerAction(pa1.clone());
                             te.addPlayerAction(pa2.clone());
-                            trace.addEntry(te);
+                            trace.addEntry(te);*/
 
                             gs.issueSafe(pa1);
                             gs.issueSafe(pa2);
@@ -972,7 +974,7 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                 ai2.gameOver(gs.winner());
 
                 // Finish up game trace & save it if 'display' is set
-                te = new TraceEntry(gs.getPhysicalGameState().clone(), gs.getTime());
+                /*te = new TraceEntry(gs.getPhysicalGameState().clone(), gs.getTime());
                 trace.addEntry(te);
 
                 if (display) // Save the trace file
@@ -988,7 +990,7 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                     trace.toxml(xml);
                     xml.flush();
                     xml.close();
-                }
+                }*/
 
                 // Resuts of game: blue units, red units, blue bases, red bases & time
                 int[] counts = {0, 0, 0, 0, 0};
@@ -1419,6 +1421,17 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                 // simulate:
                 gameover = gs.cycle();
             } while (!gameover && gs.getTime() < MAXCYCLES);
+
+            for(Unit u : startingUnits){
+                StringBuilder states = unitStates.get(u);
+                states.append(",");
+
+                states.append("{"
+                        + "\"x\":" + u.getX() + ", "
+                        + "\"y\":" + u.getY() + ", "
+                        + "\"hitpoints\":" + u.getHitPoints()
+                        + "}");
+            }
 
             ai1.gameOver(gs.winner()); // TODO what do these do?
             ai2.gameOver(gs.winner());

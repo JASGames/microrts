@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
@@ -73,6 +74,11 @@ public class GameDisruptor extends JPanel {
     private static int CurrentDraws = 0;
     private static int CurrentBWins = 0;
     private static int CurrentRWins = 0;
+
+    private static float CurrentAverage = 0;
+    private static float CurrentStdDev = 0;
+
+    private static CopyOnWriteArrayList<Integer> CurrentResults = new CopyOnWriteArrayList<Integer>();
 
     public static Element MapXML;
     public static String Map = "C:\\Users\\jakes\\Documents\\even_map.xml";
@@ -269,6 +275,7 @@ public class GameDisruptor extends JPanel {
                     int bWins = 0;
                     int rWins = 0;
                     int draws = 0;
+                    ArrayList<Integer> matchResults = new ArrayList();
 
                     for(int i = 0; i < runs; i++){
                         try {
@@ -317,6 +324,8 @@ public class GameDisruptor extends JPanel {
                                 rWins++;
                             }
 
+                            matchResults.add(result);
+
                             /*if (i % 100 == 0) {
                                 BlueWins.setText("Blue Wins: " + bWins);
                                 RedWins.setText("Red Wins: " + rWins);
@@ -332,6 +341,7 @@ public class GameDisruptor extends JPanel {
                     CurrentDraws += draws;
                     CurrentBWins += bWins;
                     CurrentRWins += rWins;
+                    CurrentResults.addAll(matchResults);
                 });
 
                 //Keep track of the thread and start it
@@ -348,9 +358,57 @@ public class GameDisruptor extends JPanel {
 
                 Thread.sleep(5);
             }
+
+            double sum = 0.0, standardDeviation = 0.0;
+
+            int buckets = 100;
+            int bucketSize = CurrentResults.size()/buckets;
+            ArrayList<Float> winRates = new ArrayList<>();
+            for(int b = 0; b < buckets; b++){
+                int draw = 0;
+                int win = 0;
+                int loss = 0;
+
+                for(int i = 0; i < bucketSize; i++){
+
+                    int index = (b*bucketSize)+i;
+
+                    if(index >= CurrentResults.size()) break;
+
+                    int result = CurrentResults.get(index);
+
+                    if (result == -1) {
+                        draw++;
+                    } else if (result == 0) {
+                        win++;
+                    } else if (result == 1) {
+                        loss++;
+                    }
+                }
+
+                float winrate = ((win + (draw / 2.0f)) / (float) (win + loss + draw) * 100);
+                //System.out.println("Bucket: "+b+" Winrate: "+winrate);
+
+                sum += winrate;
+                winRates.add(winrate);
+            }
+
+            double mean = sum/buckets;
+
+            //System.out.println("AVG: "+mean);
+
+            for(double wr : winRates) {
+                standardDeviation += Math.pow(wr - mean, 2);
+            }
+
+            standardDeviation = Math.sqrt(standardDeviation/buckets);
+
+            //System.out.println("STDEV: "+standardDeviation);
+            CurrentResults.clear();
+
+            CurrentStdDev = (float)standardDeviation;
+            CurrentAverage = (float)mean;
         }
-
-
 
         if(!display) {
             BlueWins.setText("Blue Wins: " + CurrentBWins);
@@ -362,7 +420,7 @@ public class GameDisruptor extends JPanel {
     }
 
     public static void main(String[] args) throws Exception {
-        File file = new File("red_map.xml");
+        File file = new File("even_map.xml");
         SAXBuilder saxBuilder = new SAXBuilder();
         Document document = saxBuilder.build(file);
         MapXML = document.getRootElement();
@@ -490,6 +548,8 @@ public class GameDisruptor extends JPanel {
                 new Thread(() -> {
                     try {
                         RunSimulation(false, Runtime.getRuntime().availableProcessors());
+                        System.out.println("Average: "+CurrentAverage);
+                        System.out.println("StdDev: "+CurrentStdDev);
                     } catch (Exception e1){
                         System.out.println(e1);
                     }
@@ -540,7 +600,7 @@ public class GameDisruptor extends JPanel {
             if (Running == false) {
                 Running = true;
                 new Thread(() -> {
-                    for(int o = 0; o < 10; o++) {
+                    for(int o = 10; o <= 10; o++) {
                         TargetWinRate = o * 10;
                         try {
                             //RunSimulation(false);
@@ -576,7 +636,7 @@ public class GameDisruptor extends JPanel {
 
                                         float changed = (5.0f - (Math.abs(1.0f - ((float) chromosome[i][0] / HP)) + Math.abs(1.0f - ((float) chromosome[i][1] / DMG)) + Math.abs(1.0f - ((float) chromosome[i][2] / RNG)) + Math.abs(1.0f - ((float) chromosome[i][3] / MT)) + Math.abs(1.0f - ((float) chromosome[i][4] / AT)))) / 5.0f;
                                         float tWinRate = (100 - Math.abs(WinRate - TargetWinRate)) / 100f;
-                                        fitness += ((tWinRate * WinWeight) + (changed * ChangeWeight)) + " ";
+                                        fitness += ((tWinRate * WinWeight) + (changed * ChangeWeight)) + ":" + CurrentAverage + ":" + CurrentStdDev + " ";
                                     }
 
                                     System.out.println(fitness.trim());
