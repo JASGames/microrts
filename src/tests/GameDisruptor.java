@@ -283,12 +283,16 @@ public class GameDisruptor extends JPanel {
                             PhysicalGameState pgs = PhysicalGameState.fromXML(MapXML, utt);
                             //PhysicalGameState pgs = PhysicalGameState.load(map, utt);
 
+                            ArrayList<Unit> units = new ArrayList<>();
+
                             //Update unit health to match stats
                             for (Unit unit : pgs.getUnits()) {
                                 if (unit.getType() == blight) {
                                     unit.setHitPoints(blight.hp);
+                                    units.add(unit);
                                 } else if (unit.getType() == rlight) {
                                     unit.setHitPoints(rlight.hp);
+                                    units.add(unit);
                                 }
                             }
                             GameState gs = new GameState(pgs, utt);
@@ -312,6 +316,17 @@ public class GameDisruptor extends JPanel {
                                 gameover = gs.cycle();
                             } while (!gameover && gs.getTime() < MAXCYCLES);
 
+                            int blueHP = 0;
+                            int redHP = 0;
+
+                            for(Unit u : units){
+                                if (u.getType() == blight) {
+                                    blueHP += u.getHitPoints();
+                                } else if (u.getType() == rlight) {
+                                    redHP += u.getHitPoints();
+                                }
+                            }
+
                             ai1.gameOver(gs.winner()); // TODO what do these do?
                             ai2.gameOver(gs.winner());
 
@@ -324,7 +339,7 @@ public class GameDisruptor extends JPanel {
                                 rWins++;
                             }
 
-                            matchResults.add(result);
+                            matchResults.add(blueHP-redHP);
 
                             /*if (i % 100 == 0) {
                                 BlueWins.setText("Blue Wins: " + bWins);
@@ -359,55 +374,27 @@ public class GameDisruptor extends JPanel {
                 Thread.sleep(5);
             }
 
-            double sum = 0.0, standardDeviation = 0.0;
+            float sum = 0.0f, standardDeviation = 0.0f;
 
-            int buckets = 100;
-            int bucketSize = CurrentResults.size()/buckets;
-            ArrayList<Float> winRates = new ArrayList<>();
-            for(int b = 0; b < buckets; b++){
-                int draw = 0;
-                int win = 0;
-                int loss = 0;
-
-                for(int i = 0; i < bucketSize; i++){
-
-                    int index = (b*bucketSize)+i;
-
-                    if(index >= CurrentResults.size()) break;
-
-                    int result = CurrentResults.get(index);
-
-                    if (result == -1) {
-                        draw++;
-                    } else if (result == 0) {
-                        win++;
-                    } else if (result == 1) {
-                        loss++;
-                    }
-                }
-
-                float winrate = ((win + (draw / 2.0f)) / (float) (win + loss + draw) * 100);
-                //System.out.println("Bucket: "+b+" Winrate: "+winrate);
-
-                sum += winrate;
-                winRates.add(winrate);
+            for(int b = 0; b < CurrentResults.size(); b++){
+                sum += CurrentResults.get(b);
             }
 
-            double mean = sum/buckets;
+            float mean = sum/CurrentResults.size();
 
             //System.out.println("AVG: "+mean);
 
-            for(double wr : winRates) {
-                standardDeviation += Math.pow(wr - mean, 2);
+            for(int re : CurrentResults) {
+                standardDeviation += Math.pow(re - mean, 2);
             }
 
-            standardDeviation = Math.sqrt(standardDeviation/buckets);
+            standardDeviation = (float)Math.sqrt(standardDeviation/CurrentResults.size());
 
             //System.out.println("STDEV: "+standardDeviation);
             CurrentResults.clear();
 
-            CurrentStdDev = (float)standardDeviation;
-            CurrentAverage = (float)mean;
+            CurrentStdDev = standardDeviation;
+            CurrentAverage = mean;
         }
 
         if(!display) {
@@ -600,8 +587,8 @@ public class GameDisruptor extends JPanel {
             if (Running == false) {
                 Running = true;
                 new Thread(() -> {
-                    for(int o = 10; o <= 10; o++) {
-                        TargetWinRate = o * 10;
+                    //for(int o = 10; o <= 10; o++) {
+                    //    TargetWinRate = o * 10;
                         try {
                             //RunSimulation(false);
                             BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
@@ -636,7 +623,8 @@ public class GameDisruptor extends JPanel {
 
                                         float changed = (5.0f - (Math.abs(1.0f - ((float) chromosome[i][0] / HP)) + Math.abs(1.0f - ((float) chromosome[i][1] / DMG)) + Math.abs(1.0f - ((float) chromosome[i][2] / RNG)) + Math.abs(1.0f - ((float) chromosome[i][3] / MT)) + Math.abs(1.0f - ((float) chromosome[i][4] / AT)))) / 5.0f;
                                         float tWinRate = (100 - Math.abs(WinRate - TargetWinRate)) / 100f;
-                                        fitness += ((tWinRate * WinWeight) + (changed * ChangeWeight)) + ":" + CurrentAverage + ":" + CurrentStdDev + " ";
+                                        float hpDif = Math.abs(((Math.max(BlueHP*8, RedHP*8) * (WinRate/100f)) - Math.max(BlueHP*4, RedHP*4)) - CurrentAverage) / Math.max(BlueHP*4, RedHP*4);
+                                        fitness += ((tWinRate * WinWeight) + (changed * ChangeWeight) +  hpDif) + ":" + CurrentAverage + ":" + CurrentStdDev + ":" + WinRate + " ";
                                     }
 
                                     System.out.println(fitness.trim());
@@ -653,7 +641,7 @@ public class GameDisruptor extends JPanel {
                             }
                             System.out.println();
                         }
-                    }
+                    //}
 
                     Running = false;
                 }).start();
