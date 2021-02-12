@@ -623,8 +623,7 @@ public class GameDisruptor extends JPanel {
 
                                         float changed = (5.0f - (Math.abs(1.0f - ((float) chromosome[i][0] / HP)) + Math.abs(1.0f - ((float) chromosome[i][1] / DMG)) + Math.abs(1.0f - ((float) chromosome[i][2] / RNG)) + Math.abs(1.0f - ((float) chromosome[i][3] / MT)) + Math.abs(1.0f - ((float) chromosome[i][4] / AT)))) / 5.0f;
                                         float tWinRate = (100 - Math.abs(WinRate - TargetWinRate)) / 100f;
-                                        float hpDif = Math.abs(((Math.max(BlueHP*8, RedHP*8) * (WinRate/100f)) - Math.max(BlueHP*4, RedHP*4)) - CurrentAverage) / Math.max(BlueHP*4, RedHP*4);
-                                        fitness += ((tWinRate * WinWeight) + (changed * ChangeWeight) +  hpDif) + ":" + CurrentAverage + ":" + CurrentStdDev + ":" + WinRate + " ";
+                                        fitness += ((tWinRate * WinWeight) + (changed * ChangeWeight)) + ":" + CurrentAverage + ":" + CurrentStdDev + ":" + WinRate + " ";
                                     }
 
                                     System.out.println(fitness.trim());
