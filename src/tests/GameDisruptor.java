@@ -214,18 +214,23 @@ public class GameDisruptor extends JPanel {
             int bWins = 0;
             int rWins = 0;
             int draws = 0;
+            ArrayList<Integer> matchResults = new ArrayList();
 
             for(int i = 0; i < runs; i++) {
                 // Setup game conditions
                 PhysicalGameState pgs = PhysicalGameState.fromXML(MapXML, utt);
                 //PhysicalGameState pgs = PhysicalGameState.load(map, utt);
 
+                ArrayList<Unit> units = new ArrayList<>();
+
                 //Update unit health to match stats
                 for (Unit unit : pgs.getUnits()) {
                     if (unit.getType() == blight) {
                         unit.setHitPoints(blight.hp);
+                        units.add(unit);
                     } else if (unit.getType() == rlight) {
                         unit.setHitPoints(rlight.hp);
+                        units.add(unit);
                     }
                 }
                 GameState gs = new GameState(pgs, utt);
@@ -249,6 +254,17 @@ public class GameDisruptor extends JPanel {
                     gameover = gs.cycle();
                 } while (!gameover && gs.getTime() < MAXCYCLES);
 
+                int blueHP = 0;
+                int redHP = 0;
+
+                for(Unit u : units){
+                    if (u.getType() == blight) {
+                        blueHP += u.getHitPoints();
+                    } else if (u.getType() == rlight) {
+                        redHP += u.getHitPoints();
+                    }
+                }
+
                 ai1.gameOver(gs.winner()); // TODO what do these do?
                 ai2.gameOver(gs.winner());
 
@@ -260,11 +276,36 @@ public class GameDisruptor extends JPanel {
                 } else if (result == 1) {
                     rWins++;
                 }
+
+                matchResults.add(Math.max(0,blueHP)-Math.max(0,redHP));
             }
 
             CurrentDraws += draws;
             CurrentBWins += bWins;
             CurrentRWins += rWins;
+            CurrentResults.addAll(matchResults);
+
+            float sum = 0.0f, standardDeviation = 0.0f;
+
+            for(int b = 0; b < CurrentResults.size(); b++){
+                sum += CurrentResults.get(b);
+            }
+
+            float mean = sum/CurrentResults.size();
+
+            //System.out.println("AVG: "+mean);
+
+            for(int re : CurrentResults) {
+                standardDeviation += Math.pow(re - mean, 2);
+            }
+
+            standardDeviation = (float)Math.sqrt(standardDeviation/CurrentResults.size());
+
+            //System.out.println("STDEV: "+standardDeviation);
+            CurrentResults.clear();
+
+            CurrentStdDev = standardDeviation;
+            CurrentAverage = mean;
         } else {
             ArrayList<Thread> threadList = new ArrayList<Thread>();
 
@@ -339,7 +380,7 @@ public class GameDisruptor extends JPanel {
                                 rWins++;
                             }
 
-                            matchResults.add(blueHP-redHP);
+                            matchResults.add(Math.max(0,blueHP)-Math.max(0,redHP));
 
                             /*if (i % 100 == 0) {
                                 BlueWins.setText("Blue Wins: " + bWins);
@@ -587,12 +628,40 @@ public class GameDisruptor extends JPanel {
             if (Running == false) {
                 Running = true;
                 new Thread(() -> {
-                    //for(int o = 10; o <= 10; o++) {
-                    //    TargetWinRate = o * 10;
+                    for(int o = 0; o < 4; o++) {
+                        TargetWinRate = 100;
+
+                        float HpWeight = 0;
+
+                        switch(o){
+                            case 0:
+                                WinWeight = 1;
+                                ChangeWeight = 0;
+                                HpWeight = 0;
+                                break;
+                            case 1:
+                                WinWeight = 2;
+                                ChangeWeight = 1;
+                                HpWeight = 0;
+                                break;
+                            case 2:
+                                WinWeight = 0;
+                                ChangeWeight = 0;
+                                HpWeight = 1;
+                                break;
+                            case 3:
+                                WinWeight = 0;
+                                ChangeWeight = 1;
+                                HpWeight = 2;
+                                break;
+                        }
+
+
+
                         try {
                             //RunSimulation(false);
                             BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
-                            System.out.println("Evolve|Simulation Count: " + SimulationCount + " Target Win-rate: " + TargetWinRate + " Target Weight:" + WinWeight + " Change Weight: " + ChangeWeight);
+                            System.out.println("Evolve|Simulation Count: " + SimulationCount + " Target Win-rate: " + TargetWinRate + " Target Weight:" + WinWeight + " Change Weight: " + ChangeWeight + " HP Weight: "+HpWeight);
 
 
                             while (true) {
@@ -623,7 +692,8 @@ public class GameDisruptor extends JPanel {
 
                                         float changed = (5.0f - (Math.abs(1.0f - ((float) chromosome[i][0] / HP)) + Math.abs(1.0f - ((float) chromosome[i][1] / DMG)) + Math.abs(1.0f - ((float) chromosome[i][2] / RNG)) + Math.abs(1.0f - ((float) chromosome[i][3] / MT)) + Math.abs(1.0f - ((float) chromosome[i][4] / AT)))) / 5.0f;
                                         float tWinRate = (100 - Math.abs(WinRate - TargetWinRate)) / 100f;
-                                        fitness += ((tWinRate * WinWeight) + (changed * ChangeWeight)) + ":" + CurrentAverage + ":" + CurrentStdDev + ":" + WinRate + " ";
+                                        float hpDif = 1.0f - (Math.abs(1.0f - (CurrentAverage / 80f))/2);
+                                        fitness += ((tWinRate * WinWeight) + (changed * ChangeWeight) + (hpDif * HpWeight)) + ":" + CurrentAverage + ":" + CurrentStdDev + ":" + WinRate + " ";
                                     }
 
                                     System.out.println(fitness.trim());
@@ -640,7 +710,7 @@ public class GameDisruptor extends JPanel {
                             }
                             System.out.println();
                         }
-                    //}
+                    }
 
                     Running = false;
                 }).start();
