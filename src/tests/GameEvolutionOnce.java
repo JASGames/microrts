@@ -1075,6 +1075,7 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
 
             ArrayList<Unit> startingUnits = new ArrayList<>();
             HashMap<Unit, StringBuilder> unitStates = new HashMap<>();
+            HashMap<Unit, StringBuilder> unitGoals = new HashMap<>();
 
             for(Unit u: pgs.getUnits()){
                 if(u.getType().name == "Light"){
@@ -1109,7 +1110,12 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                         + "\"y\":" + u.getY() + ", "
                         + "\"hitpoints\":" + u.getHitPoints()
                         + "}");
+
                 unitStates.put(u, usb);
+                StringBuilder ugoals = new StringBuilder();
+                if(UnitTotals.get(String.valueOf(u.getID())) != null)
+                    ugoals.append("\""+UnitTotals.get(String.valueOf(u.getID())).name()+"\"");
+                unitGoals.put(u, ugoals);
             }
 
             // Set the AIs
@@ -1394,7 +1400,14 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                                     }
                                 }*/
                     //System.out.println("Unit Game State Total: "+prevTotal);*/
+                    for(Unit u : startingUnits){
+                        StringBuilder goals = unitGoals.get(u);
+                        if(goals.length() > 0)
+                            goals.append(",");
 
+                        if(UnitTotals.get(String.valueOf(u.getID())) != null)
+                            goals.append("\""+UnitTotals.get(String.valueOf(u.getID())).name()+"\"");
+                    }
                     // Progress to next phase
                     currentPhase++;
                     //Thread.sleep(1000);
@@ -1463,6 +1476,11 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                         + ",\"states\":[");
 
                 sb.append(unitStates.get(u).toString());
+
+                sb.append("]" +
+                        ",\"goals\":[");
+
+                sb.append(unitGoals.get(u).toString());
 
                 sb.append("]}");
             }
