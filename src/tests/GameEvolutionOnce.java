@@ -1092,13 +1092,26 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
 
             QuickDeploy(pgs, utt, priorities, light, heavy, ranged);
             HashMap<ChromoBot.ChromoGoal, int[]> baseLocations = new HashMap();
+            HashMap<ChromoBot.ChromoGoal, String> baseIds = new HashMap();
             for(Unit u : pgs.getUnits()){
                 if(u.getType().name  == "Base"){
                     switch (String.valueOf(u.getID())){
-                        case "10": baseLocations.put(ChromoBot.ChromoGoal.AttackRed1, new int[]{ u.getX(), u.getY() }); break;
-                        case "30": baseLocations.put(ChromoBot.ChromoGoal.AttackRed2, new int[]{ u.getX(), u.getY() }); break;
-                        case "40": baseLocations.put(ChromoBot.ChromoGoal.AttackRed3, new int[]{ u.getX(), u.getY() }); break;
-                        case "20": baseLocations.put(ChromoBot.ChromoGoal.DefendBlue, new int[]{ u.getX(), u.getY() }); break;
+                        case "10":
+                            baseLocations.put(ChromoBot.ChromoGoal.AttackRed1, new int[]{ u.getX(), u.getY() });
+                            baseIds.put(ChromoBot.ChromoGoal.AttackRed1, "10");
+                            break;
+                        case "30":
+                            baseLocations.put(ChromoBot.ChromoGoal.AttackRed2, new int[]{ u.getX(), u.getY() });
+                            baseIds.put(ChromoBot.ChromoGoal.AttackRed2, "30");
+                            break;
+                        case "40":
+                            baseLocations.put(ChromoBot.ChromoGoal.AttackRed3, new int[]{ u.getX(), u.getY() });
+                            baseIds.put(ChromoBot.ChromoGoal.AttackRed3, "40");
+                            break;
+                        case "20":
+                            baseLocations.put(ChromoBot.ChromoGoal.DefendBlue, new int[]{ u.getX(), u.getY() });
+                            baseIds.put(ChromoBot.ChromoGoal.DefendBlue, "20");
+                            break;
                     }
                 }
 
@@ -1402,11 +1415,12 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                     //System.out.println("Unit Game State Total: "+prevTotal);*/
                     for(Unit u : startingUnits){
                         StringBuilder goals = unitGoals.get(u);
-                        if(goals.length() > 0)
-                            goals.append(",");
+                        if(UnitTotals.get(String.valueOf(u.getID())) != null) {
+                            if (goals.length() > 0)
+                                goals.append(",");
 
-                        if(UnitTotals.get(String.valueOf(u.getID())) != null)
-                            goals.append("\""+UnitTotals.get(String.valueOf(u.getID())).name()+"\"");
+                            goals.append("\"" + baseIds.get(UnitTotals.get(String.valueOf(u.getID())).name()) + "\"");
+                        }
                     }
                     // Progress to next phase
                     currentPhase++;
