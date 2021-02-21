@@ -447,6 +447,15 @@ public class GameDisruptor extends JPanel {
         }
     }
 
+    public static void Explore(){
+        JFrame frame = new JFrame("Explore Game Variables");
+        //frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        frame.pack();
+        frame.setMinimumSize(new Dimension(600, 300));
+        frame.setVisible(true);
+    }
+
     public static void main(String[] args) throws Exception {
         File file = new File("even_map.xml");
         SAXBuilder saxBuilder = new SAXBuilder();
@@ -723,7 +732,18 @@ public class GameDisruptor extends JPanel {
 
         p1.add(evolvePanel);
 
-        p1.add(new Panel());
+
+        JButton exploreButton = new JButton("Explore");
+        exploreButton.addActionListener(e -> {
+            Explore();
+            System.out.println("Explore Game Variables!");
+        });
+
+        JPanel explorePanel = new JPanel();
+        explorePanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        explorePanel.add(exploreButton);
+
+        p1.add(explorePanel);
 
         p1.add( new JLabel("Win-rate Weight: "));
 
