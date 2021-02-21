@@ -1419,7 +1419,7 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                             if (goals.length() > 0)
                                 goals.append(",");
 
-                            goals.append("\"" + baseIds.get(UnitTotals.get(String.valueOf(u.getID())).name()) + "\"");
+                            goals.append("\"" + UnitTotals.get(String.valueOf(u.getID())).name() + "\"");
                         }
                     }
                     // Progress to next phase
