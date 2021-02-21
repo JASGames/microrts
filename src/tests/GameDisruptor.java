@@ -80,6 +80,10 @@ public class GameDisruptor extends JPanel {
 
     private static CopyOnWriteArrayList<Integer> CurrentResults = new CopyOnWriteArrayList<Integer>();
 
+    private static DefaultListModel ListModel = new DefaultListModel();
+    private static JButton AddItem;
+    private static JButton RemoveItem;
+
     public static Element MapXML;
     public static String Map = "C:\\Users\\jakes\\Documents\\even_map.xml";
 
@@ -450,7 +454,80 @@ public class GameDisruptor extends JPanel {
     public static void Explore(){
         JFrame frame = new JFrame("Explore Game Variables");
         //frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        JPanel p1 = new JPanel();
+        p1.setLayout(new GridLayout(2,3));
+        p1.setBorder(new EmptyBorder(20, 20, 20, 20));
 
+        String[] gameVariables = new String[]{ "Health", "Damage", "Range", "Move Time", "Attack Time" };
+        JList list = new JList(gameVariables);
+        list.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        list.setLayoutOrientation(JList.VERTICAL);
+        list.setVisibleRowCount(-1);
+        list.setSelectedIndex(0);
+
+        JScrollPane listScroller = new JScrollPane(list);
+        p1.add(listScroller);
+
+        AddItem = new JButton(">>");
+        RemoveItem = new JButton("<<");
+        RemoveItem.setEnabled(false);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new GridLayout(2,1));
+        buttonPanel.setBorder(new EmptyBorder(50, 50, 50, 50));
+        buttonPanel.add(AddItem);
+        buttonPanel.add(RemoveItem);
+
+        p1.add(buttonPanel);
+
+        JList list2 = new JList(ListModel);
+        list2.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        list2.setLayoutOrientation(JList.VERTICAL);
+        list2.setVisibleRowCount(-1);
+
+        JScrollPane listScroller2 = new JScrollPane(list2);
+        p1.add(listScroller2);
+
+        p1.add(new Panel());
+        p1.add(new Panel());
+
+        JButton analyseButton = new JButton("Analyse");
+
+        JPanel borderPanel = new JPanel();
+        borderPanel.setBorder(new EmptyBorder(10, 50, 10, 50));
+        borderPanel.add(analyseButton);
+
+        p1.add(borderPanel);
+
+        AddItem.addActionListener(e -> {
+            String selected = (String)list.getSelectedValue();
+
+            for(int i = 0; i < ListModel.getSize(); i++){
+                if (ListModel.get(i) == selected) return;
+            }
+
+            RemoveItem.setEnabled(true);
+            ListModel.addElement(selected);
+            list2.setSelectedIndex(ListModel.size()-1);
+
+            if(ListModel.size() == 2){
+                AddItem.setEnabled(false);
+            }
+        });
+
+        RemoveItem.addActionListener(e -> {
+            String selected = (String)list2.getSelectedValue();
+
+            AddItem.setEnabled(true);
+            ListModel.removeElement(selected);
+            list2.setSelectedIndex(ListModel.size()-1);
+
+            if(ListModel.size() == 0){
+                RemoveItem.setEnabled(false);
+            }
+        });
+
+        frame.add(p1, BorderLayout.CENTER);
         frame.pack();
         frame.setMinimumSize(new Dimension(600, 300));
         frame.setVisible(true);
