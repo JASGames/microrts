@@ -714,31 +714,51 @@ public class GameDisruptor extends JPanel {
             if (Running == false) {
                 Running = true;
                 new Thread(() -> {
-                    for(int o = 0; o < 4; o++) {
+                    for(int o = 0; o < 8; o++) {
                         TargetWinRate = 100;
 
                         float HpWeight = 0;
 
                         switch(o){
                             case 0:
+                                WinWeight = 0.333f;
+                                ChangeWeight = 0.333f;
+                                HpWeight = 0.333f;
+                                break;
+                            case 1:
                                 WinWeight = 1;
                                 ChangeWeight = 0;
                                 HpWeight = 0;
                                 break;
-                            case 1:
-                                WinWeight = 2;
-                                ChangeWeight = 1;
-                                HpWeight = 0;
-                                break;
                             case 2:
-                                WinWeight = 0;
-                                ChangeWeight = 0;
-                                HpWeight = 1;
+                                WinWeight = 0.5f;
+                                ChangeWeight = 0.5f;
+                                HpWeight = 0;
                                 break;
                             case 3:
                                 WinWeight = 0;
-                                ChangeWeight = 1;
-                                HpWeight = 2;
+                                ChangeWeight = 0.5f;
+                                HpWeight = 0.5f;
+                                break;
+                            case 4:
+                                WinWeight = 0.75f;
+                                ChangeWeight = 0.25f;
+                                HpWeight = 0.333f;
+                                break;
+                            case 5:
+                                WinWeight = 0.25f;
+                                ChangeWeight = 0.75f;
+                                HpWeight = 0;
+                                break;
+                            case 6:
+                                WinWeight = 0;
+                                ChangeWeight = 0.25f;
+                                HpWeight = 0.75f;
+                                break;
+                            case 7:
+                                WinWeight = 0;
+                                ChangeWeight = 0.75f;
+                                HpWeight = 0.25f;
                                 break;
                         }
 
