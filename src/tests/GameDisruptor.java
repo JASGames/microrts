@@ -176,7 +176,7 @@ public class GameDisruptor extends JPanel {
             GameState gs = new GameState(pgs, utt);
 
             int MAXCYCLES = 350; // Maximum game length
-            int PERIOD = 25; // Refresh rate for display (milliseconds)
+            int PERIOD = 100; // Refresh rate for display (milliseconds)
 
             boolean gameover = false;
 
@@ -184,9 +184,11 @@ public class GameDisruptor extends JPanel {
             AI ai1 = new LightRush(utt, new NewStarPathFinding());
             AI ai2 = new LightRush(utt, new NewStarPathFinding());
 
-            JFrame w = PhysicalGameStatePanel.newVisualizer(gs, 768, 768, true, PhysicalGameStatePanel.COLORSCHEME_BLACK);
+            JFrame w = PhysicalGameStatePanel.newVisualizer(gs, 768, 768, false, PhysicalGameStatePanel.COLORSCHEME_BLACK);
 
+            Thread.sleep(3000);
             long nextTimeToUpdate = System.currentTimeMillis() + PERIOD;
+
             do {
                 if (System.currentTimeMillis() >= nextTimeToUpdate) {
                     PlayerAction pa1 = ai1.getAction(0, gs);
@@ -714,55 +716,11 @@ public class GameDisruptor extends JPanel {
             if (Running == false) {
                 Running = true;
                 new Thread(() -> {
-                    for(int o = 0; o < 8; o++) {
-                        TargetWinRate = 100;
-
-                        float HpWeight = 0;
-
-                        switch(o){
-                            case 0:
-                                WinWeight = 0.333f;
-                                ChangeWeight = 0.333f;
-                                HpWeight = 0.333f;
-                                break;
-                            case 1:
-                                WinWeight = 1;
-                                ChangeWeight = 0;
-                                HpWeight = 0;
-                                break;
-                            case 2:
-                                WinWeight = 0.5f;
-                                ChangeWeight = 0.5f;
-                                HpWeight = 0;
-                                break;
-                            case 3:
-                                WinWeight = 0;
-                                ChangeWeight = 0.5f;
-                                HpWeight = 0.5f;
-                                break;
-                            case 4:
-                                WinWeight = 0.75f;
-                                ChangeWeight = 0.25f;
-                                HpWeight = 0.333f;
-                                break;
-                            case 5:
-                                WinWeight = 0.25f;
-                                ChangeWeight = 0.75f;
-                                HpWeight = 0;
-                                break;
-                            case 6:
-                                WinWeight = 0;
-                                ChangeWeight = 0.25f;
-                                HpWeight = 0.75f;
-                                break;
-                            case 7:
-                                WinWeight = 0;
-                                ChangeWeight = 0.75f;
-                                HpWeight = 0.25f;
-                                break;
-                        }
-
-
+                    for(int o = 0; o <= 10; o++) {
+                        TargetWinRate = o*10;
+                        float HpWeight = 0.0f;
+                        WinWeight = 0.5f;
+                        ChangeWeight = 0.5f;
 
                         try {
                             //RunSimulation(false);
