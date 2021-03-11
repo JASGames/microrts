@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -71,12 +72,24 @@ public class GameDisruptor extends JPanel {
     private static JLabel RedWins;
     private static JLabel Draws;
     private static JLabel BlueWinRate;
+    private static JLabel AverageHPDifference;
+    private static JLabel StdDevHPDifference;
+
+    private static JTextField HPEntry;
+    private static JTextField DMGEntry;
+    private static JTextField RNGEntry;
+    private static JTextField MTEntry;
+    private static JTextField ATEntry;
+    private static JTextField SeedEntry;
+
     private static float WinRate;
     private static float TargetWinRate = 100f;
 
-    private static float WinWeight = 1.0f;
-    private static float ChangeWeight = 0.0f;
+    private static float WinWeight = 0.75f;
+    private static float ChangeWeight = 0.25f;
     private static float HpWeight = 0.0f;
+
+    private static String Seed = "";
 
     private static int CurrentDraws = 0;
     private static int CurrentBWins = 0;
@@ -307,15 +320,12 @@ public class GameDisruptor extends JPanel {
 
             float mean = sum/CurrentResults.size();
 
-            //System.out.println("AVG: "+mean);
-
             for(int re : CurrentResults) {
                 standardDeviation += Math.pow(re - mean, 2);
             }
 
             standardDeviation = (float)Math.sqrt(standardDeviation/CurrentResults.size());
 
-            //System.out.println("STDEV: "+standardDeviation);
             CurrentResults.clear();
 
             CurrentStdDev = standardDeviation;
@@ -395,14 +405,6 @@ public class GameDisruptor extends JPanel {
                             }
 
                             matchResults.add(Math.max(0,blueHP)-Math.max(0,redHP));
-
-                            /*if (i % 100 == 0) {
-                                BlueWins.setText("Blue Wins: " + bWins);
-                                RedWins.setText("Red Wins: " + rWins);
-                                Draws.setText("Draws: " + draws);
-                                WinRate = ((bWins + (draws / 2.0f)) / (float) (bWins + rWins + draws) * 100);
-                                BlueWinRate.setText("Blue Win-rate: " + WinRate + "%");
-                            }*/
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -437,15 +439,12 @@ public class GameDisruptor extends JPanel {
 
             float mean = sum/CurrentResults.size();
 
-            //System.out.println("AVG: "+mean);
-
             for(int re : CurrentResults) {
                 standardDeviation += Math.pow(re - mean, 2);
             }
 
             standardDeviation = (float)Math.sqrt(standardDeviation/CurrentResults.size());
 
-            //System.out.println("STDEV: "+standardDeviation);
             CurrentResults.clear();
 
             CurrentStdDev = standardDeviation;
@@ -453,6 +452,8 @@ public class GameDisruptor extends JPanel {
         }
 
         if(!display) {
+            AverageHPDifference.setText("Avg HP Difference: " + CurrentAverage);
+            StdDevHPDifference.setText("StdDev: " + CurrentStdDev);
             BlueWins.setText("Blue Wins: " + CurrentBWins);
             RedWins.setText("Red Wins: " + CurrentRWins);
             Draws.setText("Draws: " + CurrentDraws);
@@ -502,6 +503,221 @@ public class GameDisruptor extends JPanel {
         p1.add(new Panel());
 
         JButton analyseButton = new JButton("Analyse");
+        analyseButton.addActionListener(e -> {
+            if(Running == false){
+                Running = true;
+                Status.setText("Status: Analysing...");
+
+                new Thread(() -> {
+                    try {
+                        if(ListModel.size() == 1){
+                            frame.setVisible(false);
+
+                            String gameVar = (String)ListModel.get(0);
+
+                            BlueHP = HP;
+                            BlueDamage = DMG;
+                            BlueRange = RNG;
+                            BlueMoveTime = MT;
+                            BlueAttackTime = AT;
+                            HPEntry.setText(String.valueOf(HP));
+                            DMGEntry.setText(String.valueOf(DMG));
+                            RNGEntry.setText(String.valueOf(RNG));
+                            MTEntry.setText(String.valueOf(MT));
+                            ATEntry.setText(String.valueOf(AT));
+
+                            int gameVarMax = 0;
+
+                            switch (gameVar){
+                                case "Health":
+                                    gameVarMax = HP*2;
+                                    break;
+                                case "Damage":
+                                    gameVarMax = DMG*2;
+                                    break;
+                                case "Range":
+                                    gameVarMax = RNG*2;
+                                    break;
+                                case "Move Time":
+                                    gameVarMax = MT*2;
+                                    break;
+                                case "Attack Time":
+                                    gameVarMax = AT*2;
+                                    break;
+                            }
+
+                            String results = "";
+
+                            for(int i = 0; i <= gameVarMax; i++){
+                                Status.setText("Status: Analysing "+i+" / "+gameVarMax);
+
+                                switch (gameVar){
+                                    case "Health":
+                                        BlueHP = i;
+                                        HPEntry.setText(String.valueOf(i));
+                                        break;
+                                    case "Damage":
+                                        BlueDamage = i;
+                                        DMGEntry.setText(String.valueOf(i));
+                                        break;
+                                    case "Range":
+                                        BlueRange = i;
+                                        RNGEntry.setText(String.valueOf(i));
+                                        break;
+                                    case "Move Time":
+                                        BlueMoveTime = i;
+                                        MTEntry.setText(String.valueOf(i));
+                                        break;
+                                    case "Attack Time":
+                                        BlueAttackTime = i;
+                                        ATEntry.setText(String.valueOf(i));
+                                        break;
+                                }
+
+                                RunSimulation(false, Runtime.getRuntime().availableProcessors());
+
+                                if(i == 0){
+                                    results += WinRate;
+                                }else{
+                                    results += ","+WinRate;
+                                }
+                            }
+
+                            System.out.println("AnalyseSingle|"+gameVar+"|"+results+"|");
+                        }else if(ListModel.size() == 2){
+                            frame.setVisible(false);
+
+                            String gameVar1 = (String)ListModel.get(0);
+                            String gameVar2 = (String)ListModel.get(1);
+
+                            BlueHP = HP;
+                            BlueDamage = DMG;
+                            BlueRange = RNG;
+                            BlueMoveTime = MT;
+                            BlueAttackTime = AT;
+                            HPEntry.setText(String.valueOf(HP));
+                            DMGEntry.setText(String.valueOf(DMG));
+                            RNGEntry.setText(String.valueOf(RNG));
+                            MTEntry.setText(String.valueOf(MT));
+                            ATEntry.setText(String.valueOf(AT));
+
+                            int gameVar1Max = 0;
+                            int gameVar2Max = 0;
+
+                            switch (gameVar1){
+                                case "Health":
+                                    gameVar1Max = HP*2;
+                                    break;
+                                case "Damage":
+                                    gameVar1Max = DMG*2;
+                                    break;
+                                case "Range":
+                                    gameVar1Max = RNG*2;
+                                    break;
+                                case "Move Time":
+                                    gameVar1Max = MT*2;
+                                    break;
+                                case "Attack Time":
+                                    gameVar1Max = AT*2;
+                                    break;
+                            }
+
+                            switch (gameVar2){
+                                case "Health":
+                                    gameVar2Max = HP*2;
+                                    break;
+                                case "Damage":
+                                    gameVar2Max = DMG*2;
+                                    break;
+                                case "Range":
+                                    gameVar2Max = RNG*2;
+                                    break;
+                                case "Move Time":
+                                    gameVar2Max = MT*2;
+                                    break;
+                                case "Attack Time":
+                                    gameVar2Max = AT*2;
+                                    break;
+                            }
+
+                            String results = "";
+
+                            for(int i = gameVar1Max; i >= 0 ; i--){
+                                switch (gameVar1) {
+                                    case "Health":
+                                        BlueHP = i;
+                                        HPEntry.setText(String.valueOf(i));
+                                        break;
+                                    case "Damage":
+                                        BlueDamage = i;
+                                        DMGEntry.setText(String.valueOf(i));
+                                        break;
+                                    case "Range":
+                                        BlueRange = i;
+                                        RNGEntry.setText(String.valueOf(i));
+                                        break;
+                                    case "Move Time":
+                                        BlueMoveTime = i;
+                                        MTEntry.setText(String.valueOf(i));
+                                        break;
+                                    case "Attack Time":
+                                        BlueAttackTime = i;
+                                        ATEntry.setText(String.valueOf(i));
+                                        break;
+                                }
+
+                                if(i != gameVar1Max)
+                                    results += ":";
+
+                                for(int o = 0; o <= gameVar2Max; o++){
+                                    switch (gameVar2) {
+                                        case "Health":
+                                            BlueHP = o;
+                                            HPEntry.setText(String.valueOf(i));
+                                            break;
+                                        case "Damage":
+                                            BlueDamage = o;
+                                            DMGEntry.setText(String.valueOf(i));
+                                            break;
+                                        case "Range":
+                                            BlueRange = o;
+                                            RNGEntry.setText(String.valueOf(i));
+                                            break;
+                                        case "Move Time":
+                                            BlueMoveTime = o;
+                                            MTEntry.setText(String.valueOf(i));
+                                            break;
+                                        case "Attack Time":
+                                            BlueAttackTime = o;
+                                            ATEntry.setText(String.valueOf(i));
+                                            break;
+                                    }
+
+                                    Status.setText("Status: Analysing "+((i*gameVar2Max)+o)+" / "+(gameVar1Max*gameVar2Max));
+
+                                    RunSimulation(false, Runtime.getRuntime().availableProcessors());
+
+                                    if(o != 0)
+                                        results += ",";
+
+                                    results += WinRate;
+                                }
+                            }
+
+                            System.out.println("AnalyseMulti|"+gameVar1+"|"+gameVar2+"|"+results+"|");
+                        }
+
+
+                        //RunSimulation(false, Runtime.getRuntime().availableProcessors());
+                    } catch (Exception e1){
+                        System.out.println(e1);
+                    }
+
+                    Running = false;
+                    Status.setText("Status: Idle");
+                }).start();
+            }
+        });
 
         JPanel borderPanel = new JPanel();
         borderPanel.setBorder(new EmptyBorder(10, 50, 10, 50));
@@ -549,21 +765,21 @@ public class GameDisruptor extends JPanel {
         Document document = saxBuilder.build(file);
         MapXML = document.getRootElement();
 
-        JFrame frame = new JFrame("microRTS Game Disruptor");
+        JFrame frame = new JFrame("RTS Game Disruptor");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JPanel p1 = new JPanel();
-        p1.setLayout(new GridLayout(10,4));
+        p1.setLayout(new GridLayout(11,4));
         p1.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         p1.add( new JLabel("Blue HP: "));
 
-        JTextField blHP = new JTextField();
-        blHP.setText(String.valueOf(BlueHP));
-        blHP.getDocument().addDocumentListener((SL) e -> {
-            BlueHP = Integer.parseInt(blHP.getText());
+        HPEntry = new JTextField();
+        HPEntry.setText(String.valueOf(BlueHP));
+        HPEntry.getDocument().addDocumentListener((SL) e -> {
+            BlueHP = Integer.parseInt(HPEntry.getText());
         });
-        p1.add(blHP);
+        p1.add(HPEntry);
 
         p1.add( new JLabel("Generations: "));
 
@@ -576,12 +792,12 @@ public class GameDisruptor extends JPanel {
 
         p1.add( new JLabel("Blue Attack: "));
 
-        JTextField blAtk = new JTextField();
-        blAtk.setText(String.valueOf(BlueDamage));
-        blAtk.getDocument().addDocumentListener((SL) e -> {
-            BlueDamage = Integer.parseInt(blAtk.getText());
+        DMGEntry = new JTextField();
+        DMGEntry.setText(String.valueOf(BlueDamage));
+        DMGEntry.getDocument().addDocumentListener((SL) e -> {
+            BlueDamage = Integer.parseInt(DMGEntry.getText());
         });
-        p1.add(blAtk);
+        p1.add(DMGEntry);
 
         p1.add( new JLabel("Population: "));
 
@@ -594,12 +810,12 @@ public class GameDisruptor extends JPanel {
 
         p1.add( new JLabel("Blue Attack Range: "));
 
-        JTextField blAtkRange = new JTextField();
-        blAtkRange.setText(String.valueOf(BlueRange));
-        blAtkRange.getDocument().addDocumentListener((SL) e -> {
-            BlueRange = Integer.parseInt(blAtkRange.getText());
+        RNGEntry = new JTextField();
+        RNGEntry.setText(String.valueOf(BlueRange));
+        RNGEntry.getDocument().addDocumentListener((SL) e -> {
+            BlueRange = Integer.parseInt(RNGEntry.getText());
         });
-        p1.add(blAtkRange);
+        p1.add(RNGEntry);
 
         p1.add( new JLabel("Mutation Rate: "));
 
@@ -612,12 +828,12 @@ public class GameDisruptor extends JPanel {
 
         p1.add( new JLabel("Blue Move Time: "));
 
-        JTextField blMoveTime = new JTextField();
-        blMoveTime.setText(String.valueOf(BlueMoveTime));
-        blMoveTime.getDocument().addDocumentListener((SL) e -> {
-            BlueMoveTime = Integer.parseInt(blMoveTime.getText());
+        MTEntry = new JTextField();
+        MTEntry.setText(String.valueOf(BlueMoveTime));
+        MTEntry.getDocument().addDocumentListener((SL) e -> {
+            BlueMoveTime = Integer.parseInt(MTEntry.getText());
         });
-        p1.add(blMoveTime);
+        p1.add(MTEntry);
 
         p1.add( new JLabel("Crossover Rate: "));
 
@@ -630,12 +846,12 @@ public class GameDisruptor extends JPanel {
 
         p1.add( new JLabel("Blue Attack Time: "));
 
-        JTextField blAttackTime = new JTextField();
-        blAttackTime.setText(String.valueOf(BlueAttackTime));
-        blAttackTime.getDocument().addDocumentListener((SL) e -> {
-            BlueAttackTime = Integer.parseInt(blAttackTime.getText());
+        ATEntry = new JTextField();
+        ATEntry.setText(String.valueOf(BlueAttackTime));
+        ATEntry.getDocument().addDocumentListener((SL) e -> {
+            BlueAttackTime = Integer.parseInt(ATEntry.getText());
         });
-        p1.add(blAttackTime);
+        p1.add(ATEntry);
 
         p1.add( new JLabel("Map Selection: "));
 
@@ -656,6 +872,22 @@ public class GameDisruptor extends JPanel {
 
         p1.add(mapList);
 
+        AverageHPDifference = new JLabel("Avg HP Difference: ");
+        StdDevHPDifference = new JLabel("StdDev: ");
+
+        p1.add(AverageHPDifference);
+        p1.add(StdDevHPDifference);
+
+        p1.add(new JLabel("Seed: "));
+        SeedEntry = new JTextField();
+        SeedEntry.setText(Seed);
+        SeedEntry.getDocument().addDocumentListener((SL) e -> {
+            Seed = SeedEntry.getText();
+        });
+        p1.add(SeedEntry);
+
+
+        RedWins = new JLabel("Red Wins: ");
         BlueWins = new JLabel("Blue Wins: ");
         RedWins = new JLabel("Red Wins: ");
         Draws = new JLabel("Draws: ");
@@ -679,13 +911,11 @@ public class GameDisruptor extends JPanel {
         runButton.addActionListener(e -> {
             if(Running == false){
                 Running = true;
-                Status.setText("Status: Running...");
+                Status.setText("Status: Simulating...");
 
                 new Thread(() -> {
                     try {
                         RunSimulation(false, Runtime.getRuntime().availableProcessors());
-                        System.out.println("Average: "+CurrentAverage);
-                        System.out.println("StdDev: "+CurrentStdDev);
                     } catch (Exception e1){
                         System.out.println(e1);
                     }
@@ -736,20 +966,38 @@ public class GameDisruptor extends JPanel {
         evolveButton.addActionListener(e -> {
             if (Running == false) {
                 Running = true;
+                Status.setText("Status: Evolving...");
                 new Thread(() -> {
                         try {
-                            //RunSimulation(false);
-                            BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
-                            System.out.println("Evolve|Simulation Count: " + SimulationCount + " Target Win-rate: " + TargetWinRate + " Target Weight:" + WinWeight + " Change Weight: " + ChangeWeight + " HP Weight: "+HpWeight+" Generations: "+Generations+" Population: "+Population+ " Mutation: "+MutationRate+" Crossover: "+CrossoverRate);
+                            if(Seed == null || Seed.isEmpty()){
+                                Random random = new Random();
+                                Seed = String.valueOf(random.nextInt(1000000));
+                                SeedEntry.setText(Seed);
+                            }
 
+                            BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
+                            System.out.println("Evolve|Simulation Count: " + SimulationCount + " Target Win-rate: " + TargetWinRate + " Target Weight:" + WinWeight + " Change Weight: " + ChangeWeight + " HP Weight: "+HpWeight+" Generations: "+Generations+" Population: "+Population+ " Mutation: "+MutationRate+" Crossover: "+CrossoverRate+" Seed: "+Seed);
+
+                            int gens = 0;
+                            float best = Float.MIN_VALUE;
+
+                            HPEntry.setText(String.valueOf(HP));
+                            DMGEntry.setText(String.valueOf(DMG));
+                            RNGEntry.setText(String.valueOf(RNG));
+                            MTEntry.setText(String.valueOf(MT));
+                            ATEntry.setText(String.valueOf(AT));
 
                             while (true) {
                                 String s = bufferRead.readLine();
+                                
 
                                 if (s.contains("END")) {
-                                    System.out.println("FOUND END!");
+                                    System.out.println("Evolution Complete!");
                                     break;
                                 } else if (!s.isEmpty()) {
+                                    gens++;
+                                    Status.setText("Status: Evolving "+gens+" / "+Generations);
+                                    
                                     String[] individuals = s.split(" : ");
                                     int[][] chromosome = new int[individuals.length][5];
                                     for (int i = 0; i < individuals.length; i++) {
@@ -760,6 +1008,7 @@ public class GameDisruptor extends JPanel {
                                     }
 
                                     String fitness = "";
+
                                     for (int i = 0; i < individuals.length; i++) {
                                         BlueHP = chromosome[i][0];
                                         BlueDamage = chromosome[i][1];
@@ -772,13 +1021,33 @@ public class GameDisruptor extends JPanel {
                                         float changed = (5.0f - (Math.abs(1.0f - ((float) chromosome[i][0] / HP)) + Math.abs(1.0f - ((float) chromosome[i][1] / DMG)) + Math.abs(1.0f - ((float) chromosome[i][2] / RNG)) + Math.abs(1.0f - ((float) chromosome[i][3] / MT)) + Math.abs(1.0f - ((float) chromosome[i][4] / AT)))) / 5.0f;
                                         float tWinRate = (100 - Math.abs(WinRate - TargetWinRate)) / 100f;
                                         float hpDif = 1.0f - (Math.abs(1.0f - (CurrentAverage / 80f))/2);
-                                        fitness += ((tWinRate * WinWeight) + (changed * ChangeWeight) + (hpDif * HpWeight)) + ":" + CurrentAverage + ":" + CurrentStdDev + ":" + WinRate + " ";
+                                        float sum = ((tWinRate * WinWeight) + (changed * ChangeWeight) + (hpDif * HpWeight));
+
+                                        // Update best game variables in UI
+                                        if(sum > best){
+                                            best = sum;
+                                            HPEntry.setText(String.valueOf(BlueHP));
+                                            DMGEntry.setText(String.valueOf(BlueDamage));
+                                            RNGEntry.setText(String.valueOf(BlueRange));
+                                            MTEntry.setText(String.valueOf(BlueMoveTime));
+                                            ATEntry.setText(String.valueOf(BlueAttackTime));
+                                        }
+
+                                        fitness +=  sum + ":" + CurrentAverage + ":" + CurrentStdDev + ":" + WinRate + " ";
                                     }
 
                                     System.out.println(fitness.trim());
                                     System.out.flush();
                                 }
                             }
+
+                            BlueHP = Integer.parseInt(HPEntry.getText());
+                            BlueDamage = Integer.parseInt(DMGEntry.getText());
+                            BlueRange = Integer.parseInt(RNGEntry.getText());
+                            BlueMoveTime = Integer.parseInt(MTEntry.getText());
+                            BlueAttackTime = Integer.parseInt(ATEntry.getText());
+
+                            RunSimulation(false, Runtime.getRuntime().availableProcessors());
 
                         } catch (Exception e1) {
                             System.out.print(e1);
@@ -790,6 +1059,7 @@ public class GameDisruptor extends JPanel {
                             System.out.println();
                         }
 
+                    Status.setText("Status: Idle");
                     Running = false;
                 }).start();
             }
@@ -805,7 +1075,6 @@ public class GameDisruptor extends JPanel {
         JButton exploreButton = new JButton("Explore");
         exploreButton.addActionListener(e -> {
             Explore();
-            System.out.println("Explore Game Variables!");
         });
 
         JPanel explorePanel = new JPanel();
