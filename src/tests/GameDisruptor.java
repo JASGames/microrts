@@ -673,27 +673,27 @@ public class GameDisruptor extends JPanel {
                                     switch (gameVar2) {
                                         case "Health":
                                             BlueHP = o;
-                                            HPEntry.setText(String.valueOf(i));
+                                            HPEntry.setText(String.valueOf(o));
                                             break;
                                         case "Damage":
                                             BlueDamage = o;
-                                            DMGEntry.setText(String.valueOf(i));
+                                            DMGEntry.setText(String.valueOf(o));
                                             break;
                                         case "Range":
                                             BlueRange = o;
-                                            RNGEntry.setText(String.valueOf(i));
+                                            RNGEntry.setText(String.valueOf(o));
                                             break;
                                         case "Move Time":
                                             BlueMoveTime = o;
-                                            MTEntry.setText(String.valueOf(i));
+                                            MTEntry.setText(String.valueOf(o));
                                             break;
                                         case "Attack Time":
                                             BlueAttackTime = o;
-                                            ATEntry.setText(String.valueOf(i));
+                                            ATEntry.setText(String.valueOf(o));
                                             break;
                                     }
 
-                                    Status.setText("Status: Analysing "+((i*gameVar2Max)+o)+" / "+(gameVar1Max*gameVar2Max));
+                                    Status.setText("Status: Analysing "+(((gameVar1Max-i)*(gameVar2Max+1))+o)+" / "+((gameVar1Max+1)*(gameVar2Max+1)));
 
                                     RunSimulation(false, Runtime.getRuntime().availableProcessors());
 
@@ -1018,9 +1018,11 @@ public class GameDisruptor extends JPanel {
 
                                         RunSimulation(false, Runtime.getRuntime().availableProcessors());
 
-                                        float changed = (5.0f - (Math.abs(1.0f - ((float) chromosome[i][0] / HP)) + Math.abs(1.0f - ((float) chromosome[i][1] / DMG)) + Math.abs(1.0f - ((float) chromosome[i][2] / RNG)) + Math.abs(1.0f - ((float) chromosome[i][3] / MT)) + Math.abs(1.0f - ((float) chromosome[i][4] / AT)))) / 5.0f;
+                                        float maximumHP = HP*4;
+                                        float numberOfVariables = 5.0f;
+                                        float changed = (numberOfVariables - (Math.abs(1.0f - ((float) chromosome[i][0] / HP)) + Math.abs(1.0f - ((float) chromosome[i][1] / DMG)) + Math.abs(1.0f - ((float) chromosome[i][2] / RNG)) + Math.abs(1.0f - ((float) chromosome[i][3] / MT)) + Math.abs(1.0f - ((float) chromosome[i][4] / AT)))) / numberOfVariables;
                                         float tWinRate = (100 - Math.abs(WinRate - TargetWinRate)) / 100f;
-                                        float hpDif = 1.0f - (Math.abs(1.0f - (CurrentAverage / 80f))/2);
+                                        float hpDif = 1.0f - (Math.abs(1.0f - (CurrentAverage / maximumHP))/2);
                                         float sum = ((tWinRate * WinWeight) + (changed * ChangeWeight) + (hpDif * HpWeight));
 
                                         // Update best game variables in UI
