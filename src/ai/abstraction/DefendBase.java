@@ -161,7 +161,7 @@ public class DefendBase extends AbstractionLayerAI {
         } else if(closestEnemy != null && closestDistance < 3 ){//&& (isRanged  || getPathFinding().pathExists(u, closestEnemy.getPosition(pgs), gs, new ResourceUsage()))){
             attack(u,closestEnemy);
         }
-        else if(closestBase != null)
+        else if(closestBase != null && mybase > 7)
         {
             move(u, closestBase.getX(), closestBase.getY());
         }else {

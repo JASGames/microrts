@@ -158,6 +158,7 @@ public class ChromoBot extends AbstractionLayerAI {
         Unit closestEnemy = null;
         Unit targettedBase = null;
         int closestDistance = 0;
+        int baseDistance = 0;
         int mybase = 0;
         //Boolean mobile = false; // Any mobile enemy left?
         for (Unit u2 : pgs.getUnits()) {
@@ -171,12 +172,16 @@ public class ChromoBot extends AbstractionLayerAI {
 
             if (u2.getID() == 10 && unitGoals.containsKey(String.valueOf(u.getID())) && unitGoals.get(String.valueOf(u.getID())) == ChromoGoal.AttackRed1) {
                 targettedBase = u2;
+                baseDistance = Math.abs(u2.getX() - u.getX()) + Math.abs(u2.getY() - u.getY());
             } else if (u2.getID() == 30 && unitGoals.containsKey(String.valueOf(u.getID())) && unitGoals.get(String.valueOf(u.getID())) == ChromoGoal.AttackRed2) {
                 targettedBase = u2;
+                baseDistance = Math.abs(u2.getX() - u.getX()) + Math.abs(u2.getY() - u.getY());
             } else if (u2.getID() == 40 && unitGoals.containsKey(String.valueOf(u.getID())) && unitGoals.get(String.valueOf(u.getID())) == ChromoGoal.AttackRed3) {
                 targettedBase = u2;
+                baseDistance = Math.abs(u2.getX() - u.getX()) + Math.abs(u2.getY() - u.getY());
             } else if (u2.getID() == 20 && unitGoals.containsKey(String.valueOf(u.getID())) && unitGoals.get(String.valueOf(u.getID())) == ChromoGoal.DefendBlue) {
                 targettedBase = u2;
+                baseDistance = Math.abs(u2.getX() - u.getX()) + Math.abs(u2.getY() - u.getY());
             }
         }
 
@@ -188,7 +193,7 @@ public class ChromoBot extends AbstractionLayerAI {
             } else {
                 move(u, targettedBase.getX(), targettedBase.getY()); // NOTE this stops it from going too far aflield
             }
-        } else if (closestEnemy != null && closestDistance < 7 && (isRanged  || getPathFinding().pathExists(u, closestEnemy.getPosition(pgs), gs, new ResourceUsage()))) {
+        } else if (closestEnemy != null && closestDistance < 7 && baseDistance < 15 && (isRanged  || getPathFinding().pathExists(u, closestEnemy.getPosition(pgs), gs, new ResourceUsage()))) {
             // ie its too close, attack it
             attack(u, closestEnemy);
         } else if (targettedBase != null) {
