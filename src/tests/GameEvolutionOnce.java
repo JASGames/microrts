@@ -261,25 +261,26 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
     public static void main(String[] args) throws Exception {
         UnitTypeTable utt = new UnitTypeTable(UnitTypeTable.VERSION_ORIGINAL, UnitTypeTable.MOVE_CONFLICT_RESOLUTION_CANCEL_ALTERNATING);
 
-        String map = args[0];
-        int MAXCYCLES = Integer.parseInt(args[1]);
+        int batch = Integer.parseInt(args[0]);
+        String map = args[1];
+        int MAXCYCLES = Integer.parseInt(args[2]);
         Boolean display = false; // Display battle?
         Boolean shouldTrace = false;
         String traceChromo = "";
-        int lightUnits = Integer.parseInt(args[2]);
-        int heavyUnits = Integer.parseInt(args[3]);
-        int rangedUnits = Integer.parseInt(args[4]);
-        if (args.length > 5 && "display".equals(args[5])) {
+        int lightUnits = Integer.parseInt(args[3]);
+        int heavyUnits = Integer.parseInt(args[4]);
+        int rangedUnits = Integer.parseInt(args[5]);
+        if (args.length > 6 && "display".equals(args[6])) {
             display = true;
-        }else if(args.length > 5){
+        }else if(args.length > 6){
             shouldTrace = true;
-            traceChromo = args[5];
+            traceChromo = args[6];
         }
 
         if(!shouldTrace) //Read chromosomes from file
         {
             // Open input file and buffer
-            BufferedReader buffrd = new BufferedReader(new InputStreamReader(new FileInputStream("chromosomes.txt")));
+            BufferedReader buffrd = new BufferedReader(new InputStreamReader(new FileInputStream("chromosomes"+batch+".txt")));
 
             // Store the results before writting them
             ArrayList results = new ArrayList();
@@ -1025,7 +1026,7 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
             buffrd.close();
 
             // Open output file and write it
-            BufferedWriter buffwr = new BufferedWriter(new FileWriter("scores.txt"));
+            BufferedWriter buffwr = new BufferedWriter(new FileWriter("scores"+batch+".txt"));
 
             Iterator iter = results.iterator();
             while (iter.hasNext()) {

@@ -193,10 +193,10 @@ public class ChromoBot extends AbstractionLayerAI {
             } else {
                 move(u, targettedBase.getX(), targettedBase.getY()); // NOTE this stops it from going too far aflield
             }
-        } else if (closestEnemy != null && closestDistance < 7 && baseDistance < 15 && (isRanged  || getPathFinding().pathExists(u, closestEnemy.getPosition(pgs), gs, new ResourceUsage()))) {
+        } else if (closestEnemy != null && closestDistance < 7 && baseDistance < 25 && (isRanged  || getPathFinding().pathExists(u, closestEnemy.getPosition(pgs), gs, new ResourceUsage()))) {
             // ie its too close, attack it
             attack(u, closestEnemy);
-        } else if (targettedBase != null) {
+        } else if (targettedBase != null && getPathFinding().pathExists(u, targettedBase.getPosition(pgs), gs, new ResourceUsage())) {
             // otherwise attack assigned base
             attack(u, targettedBase);
         } else {
