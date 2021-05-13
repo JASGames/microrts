@@ -1,5 +1,6 @@
 package rts;
 
+import ai.abstraction.ChromoBot;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
@@ -7,11 +8,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+
 import util.XMLWriter;
 import org.jdom.Element;
 import org.jdom.JDOMException;

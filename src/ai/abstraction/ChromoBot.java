@@ -196,9 +196,22 @@ public class ChromoBot extends AbstractionLayerAI {
         } else if (closestEnemy != null && closestDistance < 7 && baseDistance < 25 && (isRanged  || getPathFinding().pathExists(u, closestEnemy.getPosition(pgs), gs, new ResourceUsage()))) {
             // ie its too close, attack it
             attack(u, closestEnemy);
-        } else if (targettedBase != null && getPathFinding().pathExists(u, targettedBase.getPosition(pgs), gs, new ResourceUsage())) {
-            // otherwise attack assigned base
-            attack(u, targettedBase);
+        } else if (targettedBase != null) {
+            if(unitGoals.get(String.valueOf(u.getID())) == ChromoGoal.AttackRed2){
+                //System.out.println("Attack top base!");
+                Unit b1 = pgs.getUnitAt(baseLocations.get(ChromoGoal.AttackRed1)[0], baseLocations.get(ChromoGoal.AttackRed1)[1]);
+                Unit b2 = pgs.getUnitAt(baseLocations.get(ChromoGoal.AttackRed3)[0], baseLocations.get(ChromoGoal.AttackRed3)[1]);
+
+                if(b1 == null || b1.getType().name != "Base" || b2 == null || b2.getType().name != "Base"){
+                    attack(u, targettedBase);
+                    //System.out.println("Allowed to Attack top base!");
+                }else {
+                    //System.out.println("Attack nothing!");
+                    attack(u, null);
+                }
+            }else{
+                attack(u, targettedBase);
+            }
         } else {
             //attack(u, null);
             // TODO another base?

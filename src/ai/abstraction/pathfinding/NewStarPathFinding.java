@@ -178,38 +178,52 @@ public class NewStarPathFinding extends PathFinding {
                 return null;
             }
             if (y>0 && inOpenOrClosed[pos-w] == 0) {
-                if (free[x][y-1]==null) free[x][y-1]=(pgs.getTerrain(x, y-1)==PhysicalGameState.TERRAIN_NONE);//gs.free(x, y-1);
+                if (free[x][y-1]==null) free[x][y-1]=(tfree(x, y-1, targetx, targety, pgs, start));//gs.free(x, y-1);
                 assert(free[x][y-1]!=null);
                 if (free[x][y-1]) {
-                    addToOpen(x,y-1,pos-w,pos,manhattanDistance(x, y-1, targetx, targety)+penalty(x, y-1, pgs));
+                    addToOpen(x,y-1,pos-w,pos,manhattanDistance(x, y-1, targetx, targety)+penalty(x, y-1, pgs, start));
                 }
             }
             if (x<pgs.getWidth()-1 && inOpenOrClosed[pos+1] == 0) {
-                if (free[x+1][y]==null) free[x+1][y]=(pgs.getTerrain(x+1, y)==PhysicalGameState.TERRAIN_NONE);//gs.free(x+1, y);
+                if (free[x+1][y]==null) free[x+1][y]=(tfree(x+1, y, targetx, targety, pgs, start));//gs.free(x+1, y);
                 assert(free[x+1][y]!=null);
                 if (free[x+1][y]) {
-                    addToOpen(x+1,y,pos+1,pos,manhattanDistance(x+1, y, targetx, targety)+penalty(x+1, y, pgs));
+                    addToOpen(x+1,y,pos+1,pos,manhattanDistance(x+1, y, targetx, targety)+penalty(x+1, y, pgs, start));
                 }
             }
             if (y<pgs.getHeight()-1 && inOpenOrClosed[pos+w] == 0) {
-                if (free[x][y+1]==null) free[x][y+1]=(pgs.getTerrain(x, y+1)==PhysicalGameState.TERRAIN_NONE);//gs.free(x, y+1);
+                if (free[x][y+1]==null) free[x][y+1]=(tfree(x, y+1, targetx, targety, pgs, start));//gs.free(x, y+1);
                 assert(free[x][y+1]!=null);
                 if (free[x][y+1]) {
-                    addToOpen(x,y+1,pos+w,pos,manhattanDistance(x, y+1, targetx, targety)+penalty(x, y+1, pgs));
+                    addToOpen(x,y+1,pos+w,pos,manhattanDistance(x, y+1, targetx, targety)+penalty(x, y+1, pgs, start));
                 }
             }
             if (x>0 && inOpenOrClosed[pos-1] == 0) {
-                if (free[x-1][y]==null) free[x-1][y]=(pgs.getTerrain(x-1, y)==PhysicalGameState.TERRAIN_NONE);//gs.free(x-1, y);
+                if (free[x-1][y]==null) free[x-1][y]=(tfree(x-1, y, targetx, targety, pgs, start));//gs.free(x-1, y);
                 assert(free[x-1][y]!=null);
                 if (free[x-1][y]) {
-                    addToOpen(x-1,y,pos-1,pos,manhattanDistance(x-1, y, targetx, targety)+penalty(x-1, y, pgs));
+                    addToOpen(x-1,y,pos-1,pos,manhattanDistance(x-1, y, targetx, targety)+penalty(x-1, y, pgs, start));
                 }
             }              
         }
         return null;
     }
 
-    private int penalty(int x, int y, PhysicalGameState pgs){
+    private boolean tfree(int x, int y, int targetx, int targety, PhysicalGameState pgs, Unit start){
+        int pos = (pgs.getWidth() * y) + x;
+        Unit u = UnitAtLocation.get(pos);
+
+        if( u != null && u.getPlayer() != start.getPlayer()){
+            int d = Math.abs(targetx - u.getX()) + Math.abs(targety - u.getY());
+            if(d > 25) {
+                return false;
+            }
+        }
+
+        return pgs.getTerrain(x, y) == PhysicalGameState.TERRAIN_NONE;
+    }
+
+    private int penalty(int x, int y, PhysicalGameState pgs, Unit start){
         int p = 0;
         int pos = (pgs.getWidth() * y) + x;
         Unit u = UnitAtLocation.get(pos);
@@ -227,44 +241,7 @@ public class NewStarPathFinding extends PathFinding {
         }
 
         return p;
-        /*int p = 0;
-
-
-        for(Unit u : pgs.getUnits()){
-            if (u.getX() == x && u.getY() == y) { // If the unit in the square
-                // Add a penalty
-                p = 1;
-
-                // Count the free moves the target unit has
-                int freeMoves = 0;
-                for (UnitAction ua : u.getUnitActions(gs)) {
-                    if (ua.getDirection() == UnitAction.TYPE_MOVE) freeMoves++;
-                }
-
-                // Increase the penalty by the number of available moves less than 4
-                p += 4 - freeMoves;
-            }
-        }
-
-        return p;*/
     }
-
-    /*int p = 0;
-
-        for(Unit u : gs.getUnits()) { // Loop over the units
-            if (u.getX() == x && u.getY() == y) { // If the unit in the square
-                p += 5;
-
-                for (UnitAction ua : u.getUnitActions(gs)) { // Loop over the units actions=
-                    if (ua.getDirection() == UnitAction.DIRECTION_UP) p -= 1;
-                    if (ua.getDirection() == UnitAction.DIRECTION_RIGHT) p -= 1;
-                    if (ua.getDirection() == UnitAction.DIRECTION_DOWN) p -= 1;
-                    if (ua.getDirection() == UnitAction.DIRECTION_LEFT) p -= 1;
-                }
-            }
-        }
-
-        return p;*/
     
     /*
      * This function is like the previous one, but doesn't try to reach 'target', but just to 
