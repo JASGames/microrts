@@ -4,6 +4,10 @@
  */
 package tests;
 
+import ai.abstraction.Attack;
+import ai.abstraction.DefendBase;
+import ai.abstraction.LightRush;
+import ai.abstraction.pathfinding.NewStarPathFinding;
 import ai.core.AI;
 import ai.*;
 import ai.abstraction.WorkerRush;
@@ -23,16 +27,17 @@ import rts.units.UnitTypeTable;
 public class GameVisualSimulationTest {
     public static void main(String[] args) throws Exception {
         UnitTypeTable utt = new UnitTypeTable();
-        PhysicalGameState pgs = PhysicalGameState.load("maps/16x16/basesWorkers16x16.xml", utt);
+        PhysicalGameState pgs = PhysicalGameState.load("maps/BigBoi.xml", utt);
 //        PhysicalGameState pgs = MapGenerator.basesWorkers8x8Obstacle();
 
         GameState gs = new GameState(pgs, utt);
         int MAXCYCLES = 5000;
-        int PERIOD = 20;
+        int PERIOD = 2;
         boolean gameover = false;
-        
-        AI ai1 = new WorkerRush(utt, new BFSPathFinding());        
-        AI ai2 = new RandomBiasedAI();
+
+        NewStarPathFinding pf = new NewStarPathFinding();
+        AI ai1 = new LightRush(utt, pf);
+        AI ai2 = new LightRush(utt, new NewStarPathFinding());
 
         JFrame w = PhysicalGameStatePanel.newVisualizer(gs,640,640,false,PhysicalGameStatePanel.COLORSCHEME_BLACK);
 //        JFrame w = PhysicalGameStatePanel.newVisualizer(gs,640,640,false,PhysicalGameStatePanel.COLORSCHEME_WHITE);
@@ -61,5 +66,10 @@ public class GameVisualSimulationTest {
         ai2.gameOver(gs.winner());
         
         System.out.println("Game Over");
+        System.out.println(pf.iterations);
+        System.out.println(pf.calcPath);
+        System.out.println(pf.usedPrevPath);
+        System.out.println((float)pf.usedPrevPath/(pf.calcPath+pf.usedPrevPath) * 100.0f);
+
     }    
 }

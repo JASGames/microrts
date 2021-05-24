@@ -1012,14 +1012,9 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                 }
                 counts[4] = gs.getTime();
 
-                //System.out.println("Game Over: " + counts[0] + " " + counts[1] + " " + counts[2] + " " + counts[3] + " " + counts[4]);
-                /*int lightUnits = chromosome[0][0] + chromosome[1][0] + chromosome[2][0] + chromosome[3][0];
-                int heavyUnits = chromosome[0][1] + chromosome[1][1] + chromosome[2][1] + chromosome[3][1];
-                int rangedUnits = chromosome[0][2] + chromosome[1][2] + chromosome[2][2] + chromosome[3][2];
-                int totalUnits = lightUnits + heavyUnits + rangedUnits;
-                System.out.println("Light: "+lightUnits+" Heavy: "+heavyUnits+" Ranged: "+rangedUnits+" Total:"+totalUnits);*/
-
                 results.add(counts);
+
+                System.out.println("Iterations: "+new1.iterations+" Calc Path: "+new1.calcPath+" Past Path: "+new1.usedPrevPath+" Ratio: "+((float)new1.usedPrevPath/(new1.calcPath+new1.usedPrevPath)*100.0f));
             }
 
             // Input file finished with
@@ -1078,6 +1073,9 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
             HashMap<Unit, StringBuilder> unitStates = new HashMap<>();
             HashMap<Unit, StringBuilder> unitGoals = new HashMap<>();
 
+            int blueStarting = 0;
+            int redStarting = 0;
+
             for(Unit u: pgs.getUnits()){
                 if(u.getType().name == "Light"){
                     u.setHitPoints(8);
@@ -1114,6 +1112,12 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                             baseIds.put(ChromoBot.ChromoGoal.DefendBlue, "20");
                             break;
                     }
+                }else {
+                    if(u.getPlayer() == 0){
+                        blueStarting++;
+                    }else{
+                        redStarting++;
+                    }
                 }
 
 
@@ -1133,8 +1137,9 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
             }
 
             // Set the AIs
-            AI ai1 = new ChromoBot(utt, new NewStarPathFinding(), UnitTotals, baseLocations);
-            AI ai2 = new DefendBase(utt, new NewStarPathFinding());
+            NewStarPathFinding new1 = new NewStarPathFinding();
+            AI ai1 = new ChromoBot(utt, new1, UnitTotals, baseLocations);
+            AI ai2 = new DefendBase(utt, new1);
 
             // Create a trace for saving the game
 
@@ -1467,6 +1472,52 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                         + "}");
             }
 
+            int blueEnding = 0;
+            int redEnding = 0;
+
+            for(Unit u : pgs.getUnits()){
+                if(u.getType().name == "Light"){
+                    if(u.getPlayer() == 0){
+                        blueEnding++;
+                    }else{
+                        redEnding++;
+                    }
+                } else if(u.getType().name == "Heavy"){
+                    if(u.getPlayer() == 0){
+                        blueEnding++;
+                    }else{
+                        redEnding++;
+                    }
+                } else if(u.getType().name == "Ranged"){
+                    if(u.getPlayer() == 0){
+                        blueEnding++;
+                    }else{
+                        redEnding++;
+                    }
+                }
+            }
+            
+            System.out.println("BS: "+blueStarting+" BE: "+blueEnding);
+            System.out.println("RS: "+redStarting+" RE: "+redEnding);
+
+            int blueDiff = (blueStarting-blueEnding);
+            int redDiff = (redStarting-redEnding);
+
+            if( blueDiff == 0 && redDiff == 0) {
+                System.out.println("LER 0:0 no losses");
+            }else if( blueDiff == redDiff ) {
+                System.out.println("LER 1:1");
+            } else if( blueDiff < redDiff ){
+                System.out.println(blueDiff);
+                System.out.println(redDiff);
+                System.out.println("LER "+getRatio(redDiff, blueDiff)+" in favour of Blue");
+            } else {
+                System.out.println(blueDiff);
+                System.out.println(redDiff);
+                System.out.println("LER "+getRatio(blueDiff, redDiff)+" in favour of Red");
+            }
+
+
             ai1.gameOver(gs.winner()); // TODO what do these do?
             ai2.gameOver(gs.winner());
 
@@ -1527,5 +1578,34 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
             //xml.flush();
             //xml.close();
         }
+    }
+
+    // Stack Overflow - https://stackoverflow.com/questions/7563669/algorithm-for-finding-the-ratio-of-two-floating-point-numbers
+    public static String getRatio(double d1, double d2)
+    {
+        while(Math.max(d1,d2) < Long.MAX_VALUE && d1 != (long)d1 && d2 != (long)d2)
+        {
+            d1 *= 10;
+            d2 *= 10;
+        }
+
+        try
+        {
+            double gcd = getGCD(d1,d2);
+            return ((long)(d1 / gcd)) + ":" + ((long)(d2 / gcd));
+        }
+        catch (StackOverflowError er)//in case getGDC (a recursively looping method) repeats too many times
+        {
+            throw new ArithmeticException("Irrational ratio: " + d1 + " to " + d2);
+        }
+    }
+
+    public static double getGCD(double i1, double i2)
+    {
+        if (i1 == i2)
+            return i1;
+        if (i1 > i2)
+            return getGCD(i1 - i2, i2);
+        return getGCD(i1, i2 - i1);
     }
 }

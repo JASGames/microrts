@@ -8,6 +8,8 @@ import ai.abstraction.ChromoBot;
 import rts.*;
 import rts.units.Unit;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Vector;
@@ -26,7 +28,10 @@ import java.util.Vector;
 public class NewStarPathFinding extends PathFinding {
     
     public static int iterations = 0;   // this is a debugging variable    
-    public static int accumlength = 0;   // this is a debugging variable    
+    public static int accumlength = 0;   // this is a debugging variable
+
+    public static int usedPrevPath = 0;
+    public static int calcPath = 0;
     
     Boolean free[][];
     int closed[];
@@ -36,22 +41,45 @@ public class NewStarPathFinding extends PathFinding {
     int cost[];     // cost of reaching a given position so far
     int inOpenOrClosed[];
     int openinsert = 0;
+
     HashMap<Integer, Unit> UnitAtLocation = new HashMap<>();
     HashMap<Integer, Integer> UnitFreeMoves = new HashMap<>();
+    HashMap<Unit, ArrayList<Integer>> PastPaths = new HashMap<>();
 
     // This fucntion finds the shortest path from 'start' to 'targetpos' and then returns
     // a UnitAction of the type 'actionType' with the direction of the first step in the shorteet path
     public UnitAction findPath(Unit start, int targetpos, GameState gs, ResourceUsage ru) {        
         return findPathToPositionInRange(start,targetpos,0,gs,ru);
     }
-    
-    /*
-     * This function is like the previous one, but doesn't try to reach 'target', but just to 
-     * reach a position that is at most 'range' far away from 'target'
-     */
-    public UnitAction findPathToPositionInRange(Unit start, int targetpos, int range, GameState gs, ResourceUsage ru) {
-        PhysicalGameState pgs = gs.getPhysicalGameState();
 
+    public UnitAction pastPathAction(Unit start, int startPos, int w, int targetpos, int range){
+        ArrayList<Integer> prevPath = PastPaths.get(start);
+
+        if(prevPath != null && (Math.abs(prevPath.get(0) - targetpos) <= range))
+        {
+            int newpos = prevPath.remove(prevPath.size()-1);
+
+            if(newpos == startPos && prevPath.size() > 0){
+                newpos = prevPath.remove(prevPath.size()-1);
+            }
+
+            if(prevPath.size() == 0)
+                PastPaths.remove(start);
+
+            if (newpos == startPos+w ) return new UnitAction(UnitAction.TYPE_MOVE, UnitAction.DIRECTION_DOWN);
+            if (newpos == startPos-1 ) return new UnitAction(UnitAction.TYPE_MOVE, UnitAction.DIRECTION_LEFT);
+            if (newpos == startPos-w ) return new UnitAction(UnitAction.TYPE_MOVE, UnitAction.DIRECTION_UP);
+            if (newpos == startPos+1 ) return new UnitAction(UnitAction.TYPE_MOVE, UnitAction.DIRECTION_RIGHT);
+
+            PastPaths.remove(start);
+        }else if(prevPath != null) {
+            PastPaths.remove(start);
+        }
+
+        return null;
+    }
+
+    public void calculateFreeMoves(PhysicalGameState pgs, GameState gs){
         UnitAtLocation.clear();
         UnitFreeMoves.clear();
         for(Unit u : gs.getUnits()) { // Loop over the units
@@ -76,11 +104,11 @@ public class NewStarPathFinding extends PathFinding {
 
             UnitFreeMoves.put(u.getPosition(pgs), freeMoves);
         }
+    }
 
-        int w = pgs.getWidth();
-        int h = pgs.getHeight();
+    public UnitAction pathFindingLoop(Unit start, int w, int h, int startPos, int targetpos, int range, ResourceUsage ru, PhysicalGameState pgs){
         if (free==null || free.length<w*h) {
-            free = new Boolean[w][h];        
+            free = new Boolean[w][h];
             closed = new int[w*h];
             open = new int[w*h];
             heuristic = new int[w*h];
@@ -91,7 +119,7 @@ public class NewStarPathFinding extends PathFinding {
         for(int y = 0, i = 0;y<h;y++) {
             for(int x = 0;x<w;x++,i++) {
                 free[x][y] = null;
-                closed[i] = -1;           
+                closed[i] = -1;
                 inOpenOrClosed[i] = 0;
             }
         }
@@ -103,8 +131,7 @@ public class NewStarPathFinding extends PathFinding {
         int targetx = targetpos%w;
         int targety = targetpos/w;
         int sq_range = range*range;
-        int startPos = start.getY()*w + start.getX();
-        
+
         assert(targetx>=0);
         assert(targetx<w);
         assert(targety>=0);
@@ -113,7 +140,7 @@ public class NewStarPathFinding extends PathFinding {
         assert(start.getX()<w);
         assert(start.getY()>=0);
         assert(start.getY()<h);
-        
+
         openinsert = 0;
         open[openinsert] = startPos;
         heuristic[openinsert] = manhattanDistance(start.getX(), start.getY(), targetx, targety);
@@ -123,38 +150,12 @@ public class NewStarPathFinding extends PathFinding {
         openinsert++;
 //        System.out.println("Looking for path from: " + start.getX() + "," + start.getY() + " to " + targetx + "," + targety);
         while(openinsert>0) {
-            
-            // debugging code:
-            /*
-            System.out.println("open: ");
-            for(int i = 0;i<openinsert;i++) {
-                System.out.print(" [" + (open[i]%w) + "," + (open[i]/w) + " -> "+ cost[open[i]] + "+" + heuristic[i] + "]");
-            }
-            System.out.println("");
-            for(int i = 0;i<h;i++) {
-                for(int j = 0;j<w;j++) {
-                    if (j==start.getX() && i==start.getY()) {
-                        System.out.print("s");
-                    } else if (j==targetx && i==targety) {
-                        System.out.print("t");
-                    } else if (!free[j][i]) {
-                        System.out.print("X");
-                    } else {
-                        if (inOpenOrClosed[j+i*w]==0) { 
-                            System.out.print(".");
-                        } else {
-                            System.out.print("o");
-                        }
-                    }
-                }
-                System.out.println("");
-            }
-            */
+
             iterations++;
             openinsert--;
             int pos = open[openinsert];
             int parent = parents[openinsert];
-            if (closed[pos]!=-1) continue;            
+            if (closed[pos]!=-1) continue;
             closed[pos] = parent;
 
             int x = pos%w;
@@ -162,15 +163,26 @@ public class NewStarPathFinding extends PathFinding {
 
             if (((x-targetx)*(x-targetx)+(y-targety)*(y-targety))<=sq_range) {
                 // path found, backtrack:
+                ArrayList<Integer> pathPos = new ArrayList<>();
                 int last = pos;
+                //pathPos.add(last);
 //                System.out.println("- Path from " + start.getX() + "," + start.getY() + " to " + targetpos%w + "," + targetpos/w + " (range " + range + ") in " + iterations + " iterations");
                 while(parent!=pos) {
+                    pathPos.add(last);
                     last = pos;
                     pos = parent;
                     parent = closed[pos];
                     accumlength++;
+                    //pathPos.add(pos);
 //                    System.out.println("    " + pos%w + "," + pos/w);
                 } // NB added the gs.free bits below
+
+                pathPos.add(last);
+
+                if(pathPos.size() > 0) {
+                    PastPaths.put(start, pathPos);
+                }
+
                 if (last == pos+w ) return new UnitAction(UnitAction.TYPE_MOVE, UnitAction.DIRECTION_DOWN);
                 if (last == pos-1 ) return new UnitAction(UnitAction.TYPE_MOVE, UnitAction.DIRECTION_LEFT);
                 if (last == pos-w ) return new UnitAction(UnitAction.TYPE_MOVE, UnitAction.DIRECTION_UP);
@@ -204,9 +216,33 @@ public class NewStarPathFinding extends PathFinding {
                 if (free[x-1][y]) {
                     addToOpen(x-1,y,pos-1,pos,manhattanDistance(x-1, y, targetx, targety)+penalty(x-1, y, pgs, start));
                 }
-            }              
+            }
         }
         return null;
+    }
+    
+    /*
+     * This function is like the previous one, but doesn't try to reach 'target', but just to 
+     * reach a position that is at most 'range' far away from 'target'
+     */
+    public UnitAction findPathToPositionInRange(Unit start, int targetpos, int range, GameState gs, ResourceUsage ru) {
+        PhysicalGameState pgs = gs.getPhysicalGameState();
+        int w = pgs.getWidth();
+        int h = pgs.getHeight();
+        int startPos = start.getY()*w + start.getX();
+
+        UnitAction pastAction = pastPathAction(start, startPos, w, targetpos, range);
+
+        if(pastAction != null){
+            usedPrevPath++;
+            return pastAction;
+        }
+
+        calcPath++;
+
+        calculateFreeMoves(pgs, gs);
+
+        return pathFindingLoop(start, w, h, startPos, targetpos, range, ru, pgs);
     }
 
     private boolean tfree(int x, int y, int targetx, int targety, PhysicalGameState pgs, Unit start){
@@ -266,7 +302,7 @@ public class NewStarPathFinding extends PathFinding {
     }
     
     // and keep the "open" list sorted:
-    void addToOpen(int x, int y, int newPos, int oldPos, int h) {
+    public void addToOpen(int x, int y, int newPos, int oldPos, int h) {
         cost[newPos] = cost[oldPos]+1;
         
         // find the right position for the insert:
@@ -305,9 +341,9 @@ public class NewStarPathFinding extends PathFinding {
         openinsert++;
         inOpenOrClosed[newPos] = 1;
     }
-    
-    
-    int manhattanDistance(int x, int y, int x2, int y2) {
+
+
+    public int manhattanDistance(int x, int y, int x2, int y2) {
         return Math.abs(x-x2) + Math.abs(y-y2);
     }
      
