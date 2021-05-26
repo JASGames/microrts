@@ -18,6 +18,8 @@ import ai.abstraction.ChromoBot;
 import ai.abstraction.HeavyDefense;
 import ai.abstraction.pathfinding.NewStarPathFinding;
 import gui.PhysicalGameStatePanel;
+
+import java.text.DecimalFormat;
 import java.util.*;
 import java.io.*;
 import javax.swing.JFrame;
@@ -1476,23 +1478,25 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
             int redEnding = 0;
 
             for(Unit u : pgs.getUnits()){
-                if(u.getType().name == "Light"){
-                    if(u.getPlayer() == 0){
-                        blueEnding++;
-                    }else{
-                        redEnding++;
-                    }
-                } else if(u.getType().name == "Heavy"){
-                    if(u.getPlayer() == 0){
-                        blueEnding++;
-                    }else{
-                        redEnding++;
-                    }
-                } else if(u.getType().name == "Ranged"){
-                    if(u.getPlayer() == 0){
-                        blueEnding++;
-                    }else{
-                        redEnding++;
+                if(u.getHitPoints() > 0) {
+                    if (u.getType().name == "Light") {
+                        if (u.getPlayer() == 0) {
+                            blueEnding++;
+                        } else {
+                            redEnding++;
+                        }
+                    } else if (u.getType().name == "Heavy") {
+                        if (u.getPlayer() == 0) {
+                            blueEnding++;
+                        } else {
+                            redEnding++;
+                        }
+                    } else if (u.getType().name == "Ranged") {
+                        if (u.getPlayer() == 0) {
+                            blueEnding++;
+                        } else {
+                            redEnding++;
+                        }
                     }
                 }
             }
@@ -1507,14 +1511,30 @@ public class GameEvolutionOnce { // NB exclude was "**/*.java,**/*.form"
                 System.out.println("LER 0:0 no losses");
             }else if( blueDiff == redDiff ) {
                 System.out.println("LER 1:1");
-            } else if( blueDiff < redDiff ){
+            } else if( blueDiff < redDiff){
                 System.out.println(blueDiff);
                 System.out.println(redDiff);
-                System.out.println("LER "+getRatio(redDiff, blueDiff)+" in favour of Blue");
+                if(blueDiff == 0) {
+                    System.out.println("LER " + (redDiff) +  ":0 in favour of Blue");
+                } else {
+                    String diff = new DecimalFormat("#.00").format((float)redDiff/blueDiff);
+                    if(diff == "1.00"){
+                        diff = "1";
+                    }
+                    System.out.println("LER " + diff +  ":1 in favour of Blue");
+                }
             } else {
                 System.out.println(blueDiff);
                 System.out.println(redDiff);
-                System.out.println("LER "+getRatio(blueDiff, redDiff)+" in favour of Red");
+                if(redDiff == 0) {
+                    System.out.println("LER " + (blueDiff) +  ":0 in favour of Red");
+                } else {
+                    String diff = new DecimalFormat("#.00").format((float)blueDiff/redDiff);
+                    if(diff == "1.00"){
+                        diff = "1";
+                    }
+                    System.out.println("LER " + diff +  ":1 in favour of Red");
+                }
             }
 
 

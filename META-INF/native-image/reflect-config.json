@@ -1,0 +1,129 @@
+[
+{
+  "name":"com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"java.awt.AWTKeyStroke",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"java.awt.EventQueue",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"java.awt.event.InputEvent",
+  "fields":[{"name":"canAccessSystemClipboard"}]
+},
+{
+  "name":"java.awt.event.KeyEvent",
+  "fields":[
+    {"name":"VK_A"}, 
+    {"name":"VK_BACK_SLASH"}, 
+    {"name":"VK_BACK_SPACE"}, 
+    {"name":"VK_C"}, 
+    {"name":"VK_CONTEXT_MENU"}, 
+    {"name":"VK_COPY"}, 
+    {"name":"VK_CUT"}, 
+    {"name":"VK_DELETE"}, 
+    {"name":"VK_DOWN"}, 
+    {"name":"VK_END"}, 
+    {"name":"VK_ENTER"}, 
+    {"name":"VK_F10"}, 
+    {"name":"VK_H"}, 
+    {"name":"VK_HOME"}, 
+    {"name":"VK_INSERT"}, 
+    {"name":"VK_KP_DOWN"}, 
+    {"name":"VK_KP_LEFT"}, 
+    {"name":"VK_KP_RIGHT"}, 
+    {"name":"VK_KP_UP"}, 
+    {"name":"VK_LEFT"}, 
+    {"name":"VK_O"}, 
+    {"name":"VK_PAGE_DOWN"}, 
+    {"name":"VK_PAGE_UP"}, 
+    {"name":"VK_PASTE"}, 
+    {"name":"VK_RIGHT"}, 
+    {"name":"VK_SPACE"}, 
+    {"name":"VK_UP"}, 
+    {"name":"VK_V"}, 
+    {"name":"VK_X"}
+  ]
+},
+{
+  "name":"java.awt.event.MouseMotionListener[]"
+},
+{
+  "name":"java.util.Arrays",
+  "methods":[{"name":"legacyMergeSort","parameterTypes":["java.lang.Object[]","java.util.Comparator"] }]
+},
+{
+  "name":"java.util.Map"
+},
+{
+  "name":"javax.swing.KeyStroke",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"javax.swing.plaf.FontUIResource",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","int","int"] }]
+},
+{
+  "name":"javax.swing.plaf.basic.BasicPanelUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.metal.MetalBorders",
+  "methods":[
+    {"name":"getButtonBorder","parameterTypes":[] }, 
+    {"name":"getTextFieldBorder","parameterTypes":[] }
+  ]
+},
+{
+  "name":"javax.swing.plaf.metal.MetalButtonUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.metal.MetalLabelUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.metal.MetalRootPaneUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.metal.MetalScrollBarUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"javax.swing.plaf.metal.MetalTextFieldUI",
+  "methods":[{"name":"createUI","parameterTypes":["javax.swing.JComponent"] }]
+},
+{
+  "name":"org.jdom.input.JAXPParserFactory",
+  "methods":[{"name":"createParser","parameterTypes":["boolean","java.util.Map","java.util.Map"] }]
+},
+{
+  "name":"sun.awt.Symbol",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.awt.Win32FontManager",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.awt.Win32GraphicsEnvironment",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.awt.windows.WToolkit",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.awt.windows.WingDings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.font.FreetypeFontScaler",
+  "methods":[{"name":"<init>","parameterTypes":["sun.font.Font2D","int","boolean","int"] }]
+}
+]

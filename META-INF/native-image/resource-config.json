@@ -1,0 +1,10 @@
+{
+  "resources":{
+  "includes":[{"pattern":"\\QMETA-INF/services/sun.java2d.pipe.RenderingEngine\\E"}]},
+  "bundles":[
+    {"name":"com.sun.org.apache.xerces.internal.impl.msg.SAXMessages"}, 
+    {"name":"com.sun.swing.internal.plaf.basic.resources.basic"}, 
+    {"name":"com.sun.swing.internal.plaf.metal.resources.metal"}, 
+    {"name":"sun.awt.resources.awt"}
+  ]
+}
